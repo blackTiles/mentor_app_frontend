@@ -1,0 +1,34 @@
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Header from "./components/layout/Header";
+import Sidebar from "./components/layout/Sidebar";
+import Footer from "./components/layout/Footer";
+import TeacherDashboard from "@/pages/dashboard/teacher";
+import StudentDashboard from "@/pages/dashboard/student";
+import LoginPage from "@/pages/auth/login";
+import SignupPage from "@/pages/auth/signup";
+
+const App = () => {
+  return (
+    <Router>
+      <div className="flex flex-col h-screen bg-gray-100">
+        <Header />
+        <div className="flex flex-1">
+          {/* <Sidebar /> */}
+          <main className="flex-1 p-4">
+            <Routes>
+              <Route path="/" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/dashboard/teacher/*" element={<TeacherDashboard />} />
+              <Route path="/dashboard/student/*" element={<StudentDashboard />} />
+              {/* Add more routes as needed */}
+            </Routes>
+          </main>
+        </div>
+        <Footer />
+      </div>
+    </Router>
+  );
+};
+
+export default App;
