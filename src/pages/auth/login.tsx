@@ -7,21 +7,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { OAuthProvider } from "firebase/auth";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle login logic here
     console.log("Login submitted:", { email, password });
+  };
+
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      navigate("/dashboard"); // Redirect to dashboard after login
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
+    }
+  };
+
+  const handleMicrosoftLogin = async () => {
+    const provider = new OAuthProvider('microsoft.com');
+    try {
+      const result = await signInWithPopup(auth, provider);
+      console.log("Microsoft Sign-In Success:", result.user);
+      navigate("/dashboard"); // Redirect to dashboard after login
+    } catch (error) {
+      console.error("Microsoft Sign-In Error:", error);
+    }
   };
 
   return (
@@ -91,6 +115,18 @@ const LoginPage = () => {
                 <ArrowRight className="ml-2" size={16} />
               </Button>
             </form>
+            <Button
+              onClick={handleGoogleLogin}
+              className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              Sign in with Google
+            </Button>
+            <Button
+              onClick={handleMicrosoftLogin}
+              className="w-full mt-2 bg-blue-800 hover:bg-blue-700 text-white"
+            >
+              Sign in with Microsoft
+            </Button>
           </CardContent>
           <CardFooter className="flex justify-center pt-0">
             <p className="text-sm text-gray-600">
