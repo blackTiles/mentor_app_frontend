@@ -15,7 +15,7 @@ const App = () => {
         <Header />
         <div className="flex flex-1">
           {/* <Sidebar /> */}
-          <main className="flex-1 p-4">
+          <main className="flex-1">
             <Routes>
               <Route path="/" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />

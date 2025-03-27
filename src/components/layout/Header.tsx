@@ -33,7 +33,7 @@ const Header: React.FC = () => {
     <nav className="bg-gray-800 text-white px-6 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold">MentorApp</h1>
+          <h1 className="text-xl font-bold">SkillsBridge</h1>
           <div className="hidden space-x-4">
             {location.pathname.includes("/dashboard") &&
               navLinks.map((link) => (
