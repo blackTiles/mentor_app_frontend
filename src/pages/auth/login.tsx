@@ -16,6 +16,7 @@ import microsoftLogo from "@/assets/icons/microsoft-logo.png";
 import googleLogo from "@/assets/icons/google.logo.png";
 import loginWithGoogle from "@/lib/firebase/googleLogin";
 import loginWithMicrosoft from "@/lib/firebase/microsoftLogin";
+import { SignIn } from "@/lib/firebase/emailAndPasswordAuth";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -29,7 +30,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    // <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-lg">
           <CardHeader className="space-y-1">
@@ -37,7 +38,7 @@ const LoginPage = () => {
               Welcome Back
             </CardTitle>
             <CardDescription className="text-center text-gray-600">
-              Sign in to your mentor account
+              Sign in to your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -121,6 +122,11 @@ const LoginPage = () => {
               <Button
                 type="submit"
                 className="w-full bg-gray-800 hover:bg-gray-700 text-white"
+                onClick={async () => {
+                  const result = await SignIn(email, password);
+                  console.log(result);
+                }}
+                disabled={!email || !password}
               >
                 Sign In
                 <ArrowRight className="ml-2" size={16} />
@@ -140,7 +146,7 @@ const LoginPage = () => {
           </CardFooter>
         </Card>
       </div>
-    </div>
+    // </div>
   );
 };
 

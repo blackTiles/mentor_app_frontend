@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { SignUp } from "@/lib/firebase/emailAndPasswordAuth";
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -51,7 +52,7 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    // <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Card className="bg-white shadow-lg">
           <CardHeader className="space-y-1">
@@ -131,6 +132,20 @@ const SignupPage = () => {
               <Button
                 type="submit"
                 className="w-full bg-gray-800 hover:bg-gray-700 text-white"
+                onClick={() =>
+                  SignUp(
+                    formData.name,
+                    formData.role,
+                    formData.email,
+                    formData.password
+                  )
+                }
+                disabled={
+                  !formData.name ||
+                  !formData.email ||
+                  !formData.password ||
+                  !formData.role
+                }
               >
                 Create Account
                 <ArrowRight className="ml-2" size={16} />
@@ -150,7 +165,7 @@ const SignupPage = () => {
           </CardFooter>
         </Card>
       </div>
-    </div>
+    // </div>
   );
 };
 

@@ -1,12 +1,14 @@
-import React from "react";
+import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Header from "./components/layout/Header";
-import Sidebar from "./components/layout/Sidebar";
+// import Sidebar from "./components/layout/Sidebar";
 import Footer from "./components/layout/Footer";
 import TeacherDashboard from "@/pages/dashboard/teacher";
 import StudentDashboard from "@/pages/dashboard/student";
 import LoginPage from "@/pages/auth/login";
 import SignupPage from "@/pages/auth/signup";
+import EmailVerificationPage from "./pages/dashboard";
+import AuthLayout from "@/pages/auth/layout";
 
 const App = () => {
   return (
@@ -17,10 +19,27 @@ const App = () => {
           {/* <Sidebar /> */}
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/dashboard/teacher/*" element={<TeacherDashboard />} />
-              <Route path="/dashboard/student/*" element={<StudentDashboard />} />
+              <Route
+                path="/"
+                element={<AuthLayout children={<LoginPage />} />}
+              />
+              <Route
+                path="/login"
+                element={<AuthLayout children={<LoginPage />} />}
+              />
+              <Route
+                path="/signup"
+                element={<AuthLayout children={<SignupPage />} />}
+              />
+              <Route path="/dashboard" element={<EmailVerificationPage />} />
+              <Route
+                path="/dashboard/teacher/*"
+                element={<TeacherDashboard />}
+              />
+              <Route
+                path="/dashboard/student/*"
+                element={<StudentDashboard />}
+              />
               {/* Add more routes as needed */}
             </Routes>
           </main>
