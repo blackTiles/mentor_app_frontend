@@ -5,13 +5,13 @@ import { auth } from "@/lib/firebase/config";
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      navigate("/dashboard");
-    } else {
-      navigate("/login");
-    }
-  });
+  // onAuthStateChanged(auth, (user) => {
+  //   if (user) {
+  //     navigate("/dashboard");
+  //   } else {
+  //     navigate("/login");
+  //   }
+  // });
   return (
     <div className="w-full min-h-screen bg-gray-100 flex items-center justify-center p-4">
       {children}

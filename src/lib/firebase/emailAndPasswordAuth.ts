@@ -6,7 +6,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import API from "@/lib/axios/instance";
-import { ENV, DOMAIN_URL } from "@/constants/urls";
+import { ENV, DOMAIN_URL, API_URL } from "@/constants/urls";
 import { auth } from "@/lib/firebase/config";
 
 export const SignUp = async (
@@ -22,37 +22,51 @@ export const SignUp = async (
         displayName: name,
       });
       const accessToken = await user?.getIdToken().then((accessToken) => {
-        console.log(user);
-        console.log("User Access Token ", accessToken);
+        return accessToken;
       });
-      if (user) {
-        sendEmailVerification(user, {
+      const response = await API.post(`${API_URL[ENV]}/auth/signup`, {
+        name,
+        role,
+        accessToken,
+      });
+      if (response?.data?.success && user) {
+        await sendEmailVerification(user, {
           url: `${DOMAIN_URL[ENV]}/login?uid=${user.uid}&email=${user.email}&accessToken=${accessToken}`,
-        }).then(() => {
-          // Email verification sent!
-          console.log("Email Verification sent! Check your mail box");
         });
       }
-      return user;
+      return response?.data;
     })
     .catch((error) => {
       console.log(error);
       const errorMessage = error.message;
-      return new Error(errorMessage);
+      throw new Error(errorMessage || error);
     });
 };
 
 export const SignIn = async (email: string, password: string) => {
   await signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      console.log(user);
-      return user;
+    .then(async () => {
+      const user = auth.currentUser;
+      const accessToken = await user?.getIdToken().then((accessToken) => {
+        return accessToken;
+      });
+      if (user && !user.emailVerified) {
+        await sendEmailVerification(user, {
+          url: `${DOMAIN_URL[ENV]}/login?uid=${user.uid}&email=${user.email}&accessToken=${accessToken}`,
+        });
+      }
+      const response = await API.post(`${API_URL[ENV]}/auth/login`, {
+        accessToken,
+      });
+      if (response?.data?.success) {
+        console.log(response?.data);
+        return response?.data;
+      }
     })
     .catch((error) => {
       console.log(error);
       const errorMessage = error.message;
-      return new Error(errorMessage);
+      throw new Error(errorMessage);
     });
 };
 
@@ -63,6 +77,6 @@ export const SignOut = async () => {
     })
     .catch((error) => {
       const errorMessage = error.message;
-      return new Error(errorMessage);
+      throw new Error(errorMessage);
     });
 };
