@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Calendar, Users } from "lucide-react";
 import { CardDescription } from "@/components/ui/card";
+import { CreateWorkspace } from "./CreateWorkspace";
 
 const mockStudents = [
   {
@@ -54,6 +55,10 @@ const Overview = () => {
   );
   return (
     <>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-800">Teacher Dashboard</h1>
+        <CreateWorkspace />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-white">
           <CardHeader className="pb-2">
