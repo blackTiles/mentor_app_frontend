@@ -10,7 +10,6 @@ import SignupPage from "@/pages/auth/signup";
 import EmailVerificationPage from "./pages/dashboard";
 import AuthLayout from "@/pages/auth/layout";
 
-const App = () => {
   return (
     <Router>
       <div className="flex flex-col h-screen bg-gray-100">
@@ -46,7 +45,18 @@ const App = () => {
         </div>
         <Footer />
       </div>
-    </Router>
+      <Footer /> {/* Always visible */}
+    </div>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppLayout />
+      </Router>
+    </AuthProvider>
   );
 };
 
