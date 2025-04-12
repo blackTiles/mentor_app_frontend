@@ -4,35 +4,30 @@ import API from "@/lib/axios/instance";
 import { API_URL, ENV } from "@/constants/urls";
 import { SignOut } from "@/lib/firebase/emailAndPasswordAuth";
 
-const loginWithMicrosoft = async () => {
-  await SignOut(); // Sign out the user before signing in with Microsoft
-  const provider = new OAuthProvider("microsoft.com");
-  provider.setCustomParameters({
-    prompt: "select_account",
-  });
-  await signInWithPopup(auth, provider)
-    .then(async () => {
-      const user = auth.currentUser;
-      const accessToken = await user?.getIdToken().then((accessToken) => {
-        return accessToken;
-      });
-      const response = await API.post(`${API_URL[ENV]}/auth/continue-with-social-account`, {
-        accessToken,
-      });
-      if (response?.data?.success) {
-        console.log(response?.data);
-        return response?.data;
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      return {
-        errorCode,
-        errorMessage,
-      };
-    });
+const loginWithMicrosoft = async (): Promise<any> => {
+  try {
+    await SignOut(); // Sign out the user before signing in with Microsoft
+
+    const provider = new OAuthProvider("microsoft.com");
+    provider.setCustomParameters({ prompt: "select_account" });
+
+    const result = await signInWithPopup(auth, provider);
+
+    const user = result.user;
+    if (!user) {
+      throw new Error("No user is currently signed in.");
+    }
+
+    const accessToken = await user.getIdToken();
+    const response = await API.post(
+      `${API_URL[ENV]}/auth/continue-with-social-account`,
+      { accessToken }
+    );
+
+    return response?.data;
+  } catch (error: any) {
+    throw new Error(error.message || "An error occurred during login.");
+  }
 };
 
 export default loginWithMicrosoft;

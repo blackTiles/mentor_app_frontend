@@ -14,60 +14,68 @@ export const SignUp = async (
   role: string,
   email: string,
   password: string
-) => {
-  await createUserWithEmailAndPassword(auth, email, password)
-    .then(async () => {
-      const user = auth.currentUser;
-      await updateProfile(user!, {
-        displayName: name,
-      });
-      const accessToken = await user?.getIdToken().then((accessToken) => {
-        return accessToken;
-      });
+): Promise<any> => {
+  try {
+    await SignOut();
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const user = userCredential.user;
+
+    if (user) {
+      await updateProfile(user, { displayName: name });
+
+      const accessToken = await user.getIdToken();
+
       const response = await API.post(`${API_URL[ENV]}/auth/signup`, {
         name,
         role,
         accessToken,
       });
-      if (response?.data?.success && user) {
+
+      if (response?.data?.success) {
         await sendEmailVerification(user, {
           url: `${DOMAIN_URL[ENV]}/login?uid=${user.uid}&email=${user.email}&accessToken=${accessToken}`,
         });
       }
-      return response?.data;
-    })
-    .catch((error) => {
-      console.log(error);
-      const errorMessage = error.message;
-      throw new Error(errorMessage || error);
-    });
+
+      return response.data;
+    }
+  } catch (error: any) {
+    throw new Error(error.message || error);
+  }
 };
 
-export const SignIn = async (email: string, password: string) => {
-  await signInWithEmailAndPassword(auth, email, password)
-    .then(async () => {
-      const user = auth.currentUser;
-      const accessToken = await user?.getIdToken().then((accessToken) => {
-        return accessToken;
-      });
-      if (user && !user.emailVerified) {
+export const SignIn = async (email: string, password: string): Promise<any> => {
+  try {
+    await SignOut();
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const user = userCredential.user;
+
+    if (user) {
+      const accessToken = await user.getIdToken();
+
+      if (!user.emailVerified) {
         await sendEmailVerification(user, {
           url: `${DOMAIN_URL[ENV]}/login?uid=${user.uid}&email=${user.email}&accessToken=${accessToken}`,
         });
       }
+
       const response = await API.post(`${API_URL[ENV]}/auth/login`, {
         accessToken,
       });
-      if (response?.data?.success) {
-        console.log(response?.data);
-        return response?.data;
-      }
-    })
-    .catch((error) => {
-      console.log(error);
-      const errorMessage = error.message;
-      throw new Error(errorMessage);
-    });
+
+      return response.data;
+    }
+  } catch (error: any) {
+    throw new Error(error.message || error);
+  }
 };
 
 export const SignOut = async () => {
@@ -76,7 +84,6 @@ export const SignOut = async () => {
       return true;
     })
     .catch((error) => {
-      const errorMessage = error.message;
-      throw new Error(errorMessage);
+      throw new Error(error.message || error);
     });
 };

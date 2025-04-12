@@ -17,40 +17,61 @@ import googleLogo from "@/assets/icons/google.logo.png";
 import loginWithGoogle from "@/lib/firebase/googleLogin";
 import loginWithMicrosoft from "@/lib/firebase/microsoftLogin";
 import { SignIn } from "@/lib/firebase/emailAndPasswordAuth";
+// import { useAuthStore } from "@/lib/zustand/authStore";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { login, logout, isAuthenticated } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Handle login logic here
     try {
-      const user = await SignIn(email, password);
-      console.log("Login successful:", user);
+      const data = await SignIn(email, password);
+      if (data) {
+        login(data);
+        console.log("Google login successful:", data.user);
+      }
     } catch (error) {
+      logout();
       console.error("Login failed:", error);
     }
   };
-
+  
   const handleGoogleLogin = async () => {
     try {
-      const user = await loginWithGoogle();
-      console.log("Google login successful:", user);
+      const data = await loginWithGoogle();
+      if (data) {
+        login(data);
+        console.log("Google login successful:", data.user);
+      }
     } catch (error) {
+      logout();
       console.error("Google login failed:", error);
     }
   };
 
   const handleMicrosoftLogin = async () => {
     try {
-      const user = await loginWithMicrosoft();
-      console.log("Microsoft login successful:", user);
+      const data = await loginWithMicrosoft();
+      if (data) {
+        login(data);
+        console.log("Google login successful:", data.user);
+      }
     } catch (error) {
+      logout();
       console.error("Microsoft login failed:", error);
     }
   };
+
+  if (isAuthenticated) {
+    navigate("/dashboard");
+  }
 
   return (
     // <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">

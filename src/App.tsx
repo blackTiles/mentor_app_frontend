@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+// import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Header from "./components/layout/Header";
 // import Sidebar from "./components/layout/Sidebar";
 import Footer from "./components/layout/Footer";
-import TeacherDashboard from "@/pages/dashboard/teacher";
+import TeacherDashboard from "@/pages/dashboard/mentor";
 import StudentDashboard from "@/pages/dashboard/student";
 import LoginPage from "@/pages/auth/login";
 import SignupPage from "@/pages/auth/signup";
@@ -33,7 +33,7 @@ const App = () => {
               />
               <Route path="/dashboard" element={<EmailVerificationPage />} />
               <Route
-                path="/dashboard/teacher/*"
+                path="/dashboard/mentor/*"
                 element={<TeacherDashboard />}
               />
               <Route
