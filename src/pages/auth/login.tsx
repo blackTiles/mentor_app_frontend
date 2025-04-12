@@ -11,137 +11,178 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { OAuthProvider } from "firebase/auth";
+import { Link } from "react-router-dom";
+import microsoftLogo from "@/assets/icons/microsoft-logo.png";
+import googleLogo from "@/assets/icons/google.logo.png";
+import loginWithGoogle from "@/lib/firebase/googleLogin";
+import loginWithMicrosoft from "@/lib/firebase/microsoftLogin";
+import { SignIn } from "@/lib/firebase/emailAndPasswordAuth";
+// import { useAuthStore } from "@/lib/zustand/authStore";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { login, logout, isAuthenticated } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Login submitted:", { email, password });
-  };
-
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
+    // Handle login logic here
     try {
-      const result = await signInWithPopup(auth, provider);
-      navigate("/dashboard"); // Redirect to dashboard after login
+      const data = await SignIn(email, password);
+      if (data) {
+        login(data);
+        console.log("Google login successful:", data.user);
+      }
     } catch (error) {
-      console.error("Google Sign-In Error:", error);
+      logout();
+      console.error("Login failed:", error);
+    }
+  };
+  
+  const handleGoogleLogin = async () => {
+    try {
+      const data = await loginWithGoogle();
+      if (data) {
+        login(data);
+        console.log("Google login successful:", data.user);
+      }
+    } catch (error) {
+      logout();
+      console.error("Google login failed:", error);
     }
   };
 
   const handleMicrosoftLogin = async () => {
-    const provider = new OAuthProvider('microsoft.com');
     try {
-      const result = await signInWithPopup(auth, provider);
-      console.log("Microsoft Sign-In Success:", result.user);
-      navigate("/dashboard"); // Redirect to dashboard after login
+      const data = await loginWithMicrosoft();
+      if (data) {
+        login(data);
+        console.log("Google login successful:", data.user);
+      }
     } catch (error) {
-      console.error("Microsoft Sign-In Error:", error);
+      logout();
+      console.error("Microsoft login failed:", error);
     }
   };
 
+  if (isAuthenticated) {
+    navigate("/dashboard");
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="bg-white shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center text-gray-800">
-              Welcome Back
-            </CardTitle>
-            <CardDescription className="text-center text-gray-600">
-              Sign in to your mentor account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700">
-                  Email
+    // <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="w-full max-w-md">
+      <Card className="bg-white shadow-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center text-gray-800">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-center text-gray-600">
+            Sign in to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-row items-center justify-between gap-3">
+            <div className="w-full flex-1">
+              <button
+                onClick={handleGoogleLogin}
+                type="button"
+                className="w-full flex justify-center items-center gap-2 bg-white text-sm text-gray-600 p-2 rounded-md hover:bg-gray-50 border border-gray-200 focus:outline-none transition-colors duration-300 cursor-pointer"
+              >
+                <img src={googleLogo} className="w-4 h-4" />
+                Google{" "}
+              </button>
+            </div>
+            <div className="w-full flex-1">
+              <button
+                onClick={handleMicrosoftLogin}
+                type="button"
+                className="w-full flex justify-center items-center gap-2 bg-white text-sm text-gray-600 p-2 rounded-md hover:bg-gray-50 border border-gray-200 focus:outline-none transition-colors duration-300 cursor-pointer"
+              >
+                <img src={microsoftLogo} className="w-4 h-4" />
+                Microsoft{" "}
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-3 mb-3 text-sm text-gray-600 text-center">
+            <span className="flex-1 h-[.5px] bg-gray-300"></span>
+            <span className="text-gray-400">OR</span>
+            <span className="flex-1 h-[.5px] bg-gray-300"></span>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your.email@example.com"
+                required
+                className="bg-gray-50 border-gray-300 focus:border-gray-500 focus:ring-gray-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Label htmlFor="password" className="text-gray-700">
+                  Password
                 </Label>
+                <a
+                  href="#"
+                  className="text-sm text-gray-600 hover:text-gray-800"
+                >
+                  Forgot password?
+                </a>
+              </div>
+              <div className="relative">
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your.email@example.com"
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
                   required
-                  className="bg-gray-50 border-gray-300 focus:border-gray-500 focus:ring-gray-500"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-gray-50 border-gray-300 focus:border-gray-500 focus:ring-gray-500 pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label htmlFor="password" className="text-gray-700">
-                    Password
-                  </Label>
-                  <a
-                    href="#"
-                    className="text-sm text-gray-600 hover:text-gray-800"
-                  >
-                    Forgot password?
-                  </a>
-                </div>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    required
-                    className="bg-gray-50 border-gray-300 focus:border-gray-500 focus:ring-gray-500 pr-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-gray-800 hover:bg-gray-700 text-white"
-              >
-                Sign In
-                <ArrowRight className="ml-2" size={16} />
-              </Button>
-            </form>
+            </div>
             <Button
-              onClick={handleGoogleLogin}
-              className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white"
+              type="submit"
+              className="w-full bg-gray-800 hover:bg-gray-700 text-white"
+              disabled={!email || !password}
             >
-              Sign in with Google
+              Sign In
+              <ArrowRight className="ml-2" size={16} />
             </Button>
-            <Button
-              onClick={handleMicrosoftLogin}
-              className="w-full mt-2 bg-blue-800 hover:bg-blue-700 text-white"
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center pt-0">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-gray-800 hover:underline font-medium"
             >
-              Sign in with Microsoft
-            </Button>
-          </CardContent>
-          <CardFooter className="flex justify-center pt-0">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
-              <Link
-                to="/signup"
-                className="text-gray-800 hover:underline font-medium"
-              >
-                Sign up
-              </Link>
-            </p>
-          </CardFooter>
-        </Card>
-      </div>
+              Sign up
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
+    // </div>
   );
 };
 

@@ -1,41 +1,49 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
+// import { useEffect } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Header from "./components/layout/Header";
-import Sidebar from "./components/layout/Sidebar";
+// import Sidebar from "./components/layout/Sidebar";
 import Footer from "./components/layout/Footer";
-import TeacherDashboard from "@/pages/dashboard/teacher";
+import TeacherDashboard from "@/pages/dashboard/mentor";
 import StudentDashboard from "@/pages/dashboard/student";
 import LoginPage from "@/pages/auth/login";
 import SignupPage from "@/pages/auth/signup";
-import { AuthProvider } from "@/context/AuthContext";
-
-const TopBar = () => (
-  // Logo
-    <h1 className="text-2xl font-bold"> MentorApp </h1>
-  
-);
-
-const AppLayout = () => {
-  const location = useLocation();
-
-  // Define routes where Header and Sidebar should be hidden
-  const hideLayoutPaths = ["/", "/signup"];
-  const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
+import EmailVerificationPage from "./pages/dashboard";
+import AuthLayout from "@/pages/auth/layout";
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      <TopBar /> {/* Always show the TopBar with the logo */}
-      {!shouldHideLayout && <Header />}
-      <div className="flex flex-1">
-        {!shouldHideLayout && <Sidebar />}
-        <main className="flex-1 p-4">
-          <Routes>
-            <Route path="/" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/dashboard/teacher/*" element={<TeacherDashboard />} />
-            <Route path="/dashboard/student/*" element={<StudentDashboard />} />
-          </Routes>
-        </main>
+    <Router>
+      <div className="flex flex-col h-screen bg-gray-100">
+        <Header />
+        <div className="flex flex-1">
+          {/* <Sidebar /> */}
+          <main className="flex-1">
+            <Routes>
+              <Route
+                path="/"
+                element={<AuthLayout children={<LoginPage />} />}
+              />
+              <Route
+                path="/login"
+                element={<AuthLayout children={<LoginPage />} />}
+              />
+              <Route
+                path="/signup"
+                element={<AuthLayout children={<SignupPage />} />}
+              />
+              <Route path="/dashboard" element={<EmailVerificationPage />} />
+              <Route
+                path="/dashboard/mentor/*"
+                element={<TeacherDashboard />}
+              />
+              <Route
+                path="/dashboard/student/*"
+                element={<StudentDashboard />}
+              />
+              {/* Add more routes as needed */}
+            </Routes>
+          </main>
+        </div>
+        <Footer />
       </div>
       <Footer /> {/* Always visible */}
     </div>

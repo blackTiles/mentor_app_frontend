@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import Overview from "@/components/dashboard/teacher/Overview";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, Users } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const tabList = [
   { name: "Overview", path: "overview", element: <Overview /> },
@@ -20,8 +21,34 @@ const tabList = [
 const TeacherDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const tabPath = location.pathname.split("/")[3];
   const [searchQuery, setSearchQuery] = useState("");
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setLoadingUser(false);
+    }
+  }, [user, navigate]);
+
+  // Check if the user is authenticated and has the correct role
+  useEffect(() => {
+    if (!loadingUser && (!isAuthenticated || user.role !== "mentor")) {
+      navigate("/dashboard");
+    }
+    if (!isLoading && !user) {
+      logout();
+    }
+  }, [loadingUser, user, navigate]);
+
+  if (loadingUser) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -69,7 +96,7 @@ const TeacherDashboard = () => {
               <TabsTrigger
                 key={tab.path}
                 value={tab.path}
-                onClick={() => navigate(`/dashboard/teacher/${tab.path}`)}
+                onClick={() => navigate(`/dashboard/mentor/${tab.path}`)}
               >
                 {tab.name}
               </TabsTrigger>
