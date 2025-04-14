@@ -1,7 +1,11 @@
-import { signInWithPopup, OAuthProvider } from "firebase/auth";
+import {
+  signInWithPopup,
+  OAuthProvider,
+  sendEmailVerification,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import API from "@/lib/axios/instance";
-import { API_URL, ENV } from "@/constants/urls";
+import { API_URL, ENV, DOMAIN_URL } from "@/constants/urls";
 import { SignOut } from "@/lib/firebase/emailAndPasswordAuth";
 
 const loginWithMicrosoft = async (): Promise<any> => {
@@ -19,6 +23,12 @@ const loginWithMicrosoft = async (): Promise<any> => {
     }
 
     const accessToken = await user.getIdToken();
+
+    if (!user.emailVerified) {
+      await sendEmailVerification(user, {
+        url: `${DOMAIN_URL[ENV]}/login?uid=${user.uid}&email=${user.email}&accessToken=${accessToken}`,
+      });
+    }
     const response = await API.post(
       `${API_URL[ENV]}/auth/continue-with-social-account`,
       { accessToken }

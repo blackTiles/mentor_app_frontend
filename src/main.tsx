@@ -8,11 +8,11 @@ import { AuthProvider } from "@/context/AuthContext";
 const queryClient = new QueryClient()
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <App />
       </AuthProvider>
     </QueryClientProvider>
-  </StrictMode>
+  // </StrictMode>
 );

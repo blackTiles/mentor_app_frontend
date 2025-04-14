@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import CreateWorkspace from "@/components/dashboard/teacher/CreateWorkspace";
 
 const tabList = [
   { name: "Overview", path: "overview", element: <Overview /> },
@@ -25,6 +26,7 @@ const TeacherDashboard = () => {
   const tabPath = location.pathname.split("/")[3];
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingUser, setLoadingUser] = useState(true);
+  const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -54,6 +56,9 @@ const TeacherDashboard = () => {
     <div className="min-h-screen bg-gray-100">
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
+        {showWorkspaceModal && (
+          <CreateWorkspace setShowWorkspaceModal={setShowWorkspaceModal} />
+        )}
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
           <div>
@@ -65,7 +70,7 @@ const TeacherDashboard = () => {
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex space-x-3">
-            <div className="relative">
+            {/* <div className="relative">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                 size={18}
@@ -76,10 +81,13 @@ const TeacherDashboard = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div>
-            <Button className="bg-gray-800 hover:bg-gray-700">
-              <Users size={16} className="mr-2" />
-              Add Student
+            </div> */}
+            <Button
+              onClick={() => setShowWorkspaceModal(true)}
+              className="bg-gray-800 hover:bg-gray-700"
+            >
+              <Users size={16} className="mr-0" />
+              Create New Workspace
             </Button>
           </div>
         </div>
