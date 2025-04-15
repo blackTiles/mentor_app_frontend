@@ -66,7 +66,7 @@ export default function WorkspaceCard({
     <Card
       className="w-full"
       onClick={
-        () => navigate(`/dashboard/mentor/workspaces/${_id}`) // Ensure _id is defined or handle undefined case
+        () => navigate(`/dashboard/workspaces/${_id}`) // Ensure _id is defined or handle undefined case
       }
     >
       <CardHeader>

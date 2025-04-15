@@ -4,13 +4,13 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Workspace() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   const navigate = useNavigate();
 
   // Check if the user is authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate("/login");
     }
   }, [isAuthenticated, navigate]);
