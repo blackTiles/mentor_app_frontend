@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
+import Spinner from "@/components/loaders/spinner";
+import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
+import { WorkspaceCardProps } from "../WorkspaceCard";
 
 interface Student {
   id: number;
@@ -14,33 +17,19 @@ interface Student {
   picture: string;
 }
 
-// Mock data for students that can be added to the workspace
-// const studentsList: Student[] = [
-//   { id: 1, name: "Olivia Martin", email: "m@example.com", picture: "" },
-//   {
-//     id: 2,
-//     name: "Isabella Nguyen",
-//     email: "isabella.nguyen@email.com",
-//     picture: "",
-//   },
-//   { id: 3, name: "Emma Wilson", email: "emma@example.com", picture: "" },
-//   { id: 4, name: "Jackson Lee", email: "lee@example.com", picture: "" },
-//   { id: 5, name: "William Kim", email: "will@email.com", picture: "" },
-//   { id: 6, name: "Emma Wilson", email: "emma@example.com", picture: "" },
-//   { id: 7, name: "Jackson Lee", email: "lee@example.com", picture: "" },
-//   { id: 8, name: "William Kim", email: "will@email.com", picture: "" },
-// ];
-
 const CreateWorkspace = ({
   setShowWorkspaceModal,
 }: {
   setShowWorkspaceModal: (show: boolean) => void;
 }) => {
+  const { workspaces, setWorkspaces } = useWorkspaceStore((state) => state);
   const [searchQuery, setSearchQuery] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [workspaceDescription, setWorkspaceDescription] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+  const [creatingWorkspace, setCreatingWorkspace] = useState(false);
 
   // Filter students based on search query
   const filteredStudents = students.filter(
@@ -52,7 +41,9 @@ const CreateWorkspace = ({
   // Toggle student selection
   const toggleStudent = (student: Student) => {
     if (selectedStudents.some((s) => s._id === student._id)) {
-      setSelectedStudents(selectedStudents.filter((s) => s._id !== student._id));
+      setSelectedStudents(
+        selectedStudents.filter((s) => s._id !== student._id)
+      );
     } else {
       setSelectedStudents([...selectedStudents, student]);
     }
@@ -73,13 +64,29 @@ const CreateWorkspace = ({
   };
 
   // Handle form submission
-  const handleSubmit = () => {
-    console.log("Workspace created:", {
-      name: workspaceName,
-      description: workspaceDescription,
-      students: selectedStudents,
-    });
-    // In a real implementation, this would create the workspace and close the modal
+  const handleSubmit = async () => {
+    try {
+      setCreatingWorkspace(true);
+      const workspaceData = {
+        name: workspaceName.trim(),
+        description: workspaceDescription.trim(),
+        members: selectedStudents.map((student) => student._id),
+      };
+      const response = await API.post(
+        "/workspace/create-workspace",
+        workspaceData
+      );
+      if (response.status === 200) {
+        const newWorkspace: WorkspaceCardProps = response.data.workspace;
+        const allWorkspaces = [...workspaces, newWorkspace];
+        setWorkspaces(allWorkspaces); // Update the workspace store with the new workspace
+      }
+      handleClose(); // Close the modal after successful creation
+    } catch (error) {
+      console.error("Error creating workspace:", error);
+    } finally {
+      setCreatingWorkspace(false);
+    }
   };
 
   useEffect(() => {
@@ -108,9 +115,9 @@ const CreateWorkspace = ({
           setStudents(students);
         }
       })
-      .catch((error) => console.error("Error fetching students:", error));
-  }
-  , []);
+      .catch((error) => console.error("Error fetching students:", error))
+      .finally(() => setLoadingStudents(false));
+  }, []);
 
   return (
     <div
@@ -189,34 +196,47 @@ const CreateWorkspace = ({
               className="w-full mb-3"
             />
           </div>
-
-          <div className="max-h-48 overflow-y-auto">
-            {filteredStudents.map((student) => (
-              <div
-                key={student._id}
-                className={`flex items-center p-3 hover:bg-gray-100 cursor-pointer rounded-md transition ${
-                  isSelected(student._id) ? "bg-gray-100" : ""
-                }`}
-                onClick={() => toggleStudent(student)}
-              >
-                <Avatar className="h-10 w-10 mr-3">
-                  <AvatarImage src={student.picture} alt={student.name} />
-                  <AvatarFallback className="bg-gray-300">
-                    {student.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium text-gray-800">
-                    {student.name}
+          {loadingStudents ? (
+            <div className="flex items-center justify-center h-36">
+              <Spinner />
+            </div>
+          ) : (
+            <div className="h-36 overflow-y-auto">
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((student) => (
+                  <div
+                    key={student._id}
+                    className={`flex items-center p-3 hover:bg-gray-100 cursor-pointer rounded-md transition ${
+                      isSelected(student._id) ? "bg-gray-100" : ""
+                    }`}
+                    onClick={() => toggleStudent(student)}
+                  >
+                    <Avatar className="h-10 w-10 mr-3">
+                      <AvatarImage src={student.picture} alt={student.name} />
+                      <AvatarFallback className="bg-gray-300">
+                        {student.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium text-gray-800">
+                        {student.name}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {student.email}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">{student.email}</div>
+                ))
+              ) : (
+                <div className="text-gray-500 text-sm p-3">
+                  No students found.
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Selected Students Summary */}
@@ -256,9 +276,13 @@ const CreateWorkspace = ({
           <Button
             onClick={handleSubmit}
             className="bg-gray-800 hover:bg-gray-700 text-white"
-            disabled={!workspaceName.trim()}
+            disabled={!workspaceName.trim() || creatingWorkspace}
           >
-            Create Workspace
+            {creatingWorkspace ? (
+              <Spinner color="border-white" size="h-5 w-5" />
+            ) : (
+              "Create Workspace"
+            )}
           </Button>
         </div>
       </div>

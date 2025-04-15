@@ -9,6 +9,7 @@ import LoginPage from "@/pages/auth/login";
 import SignupPage from "@/pages/auth/signup";
 import EmailVerificationPage from "./pages/dashboard";
 import AuthLayout from "@/pages/auth/layout";
+import Workspace from "@/pages/dashboard/mentor/workspace";
 
 const App = () => {
   return (
@@ -37,9 +38,15 @@ const App = () => {
                 element={<TeacherDashboard />}
               />
               <Route
+                path="/dashboard/mentor/workspace/:workspaceId"
+                element={<Workspace />}
+              />
+
+              <Route
                 path="/dashboard/student/*"
                 element={<StudentDashboard />}
               />
+
               {/* Add more routes as needed */}
             </Routes>
           </main>

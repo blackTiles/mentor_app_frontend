@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Calendar, Users } from "lucide-react";
 import { CardDescription } from "@/components/ui/card";
+import WorkspaceCard from "@/components/dashboard/WorkspaceCard";
+import API from "@/lib/axios/instance";
+import Spinner from "@/components/loaders/spinner";
+import { WorkspaceCardProps } from "@/components/dashboard/WorkspaceCard";
+import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 
 const mockStudents = [
   {
@@ -14,7 +19,7 @@ const mockStudents = [
     subject: "Mathematics",
     progress: 75,
     lastActive: "2 hours ago",
-    avatarUrl: "",
+    picture: "",
   },
   {
     id: 2,
@@ -23,7 +28,7 @@ const mockStudents = [
     subject: "Physics",
     progress: 60,
     lastActive: "1 day ago",
-    avatarUrl: "",
+    picture: "",
   },
   {
     id: 3,
@@ -32,7 +37,7 @@ const mockStudents = [
     subject: "Chemistry",
     progress: 90,
     lastActive: "3 hours ago",
-    avatarUrl: "",
+    picture: "",
   },
   {
     id: 4,
@@ -41,17 +46,41 @@ const mockStudents = [
     subject: "Biology",
     progress: 45,
     lastActive: "Just now",
-    avatarUrl: "",
+    picture: "",
   },
 ];
 
 const Overview = () => {
+  const { workspaces, setWorkspaces } = useWorkspaceStore((state) => state);
   const [searchQuery, setSearchQuery] = useState("");
-  const filteredStudents = mockStudents.filter(student => 
-    student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.subject.toLowerCase().includes(searchQuery.toLowerCase())
+  // const [workspaces, setWorkspaces] = useState([]);
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState(true);
+
+  const filteredStudents = mockStudents.filter(
+    (student) =>
+      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.subject.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    const fetchWorkspaces = async () => {
+      try {
+        setLoadingWorkspaces(true);
+        const response = await API.get("/workspace/get-workspaces"); // Adjust the endpoint as needed
+        if (response.status === 200) {
+          setWorkspaces(response.data.workspaces);
+        }
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      } finally {
+        setLoadingWorkspaces(false);
+      }
+    };
+
+    fetchWorkspaces();
+  }, []);
+
   return (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -102,7 +131,7 @@ const Overview = () => {
       </div>
 
       {/* Recent Students */}
-      <Card className="bg-white">
+      {/* <Card className="bg-white">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-medium text-gray-800">
             Recent Students
@@ -118,7 +147,7 @@ const Overview = () => {
               >
                 <div className="flex items-center space-x-3">
                   <Avatar>
-                    <AvatarImage src={student.avatarUrl} alt={student.name} />
+                    <AvatarImage src={student.picture} alt={student.name} />
                     <AvatarFallback className="bg-gray-300">
                       {student.name
                         .split(" ")
@@ -147,6 +176,41 @@ const Overview = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card> */}
+
+      {/* recent workspaces  */}
+      <Card className="bg-white mt-4">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-medium text-gray-800">
+            Recent Workspaces
+          </CardTitle>
+          <CardDescription>Your recently active workspaces</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full h-full">
+            {loadingWorkspaces ? (
+              <div className="w-full mx-auto flex justify-center items-center h-32">
+                <Spinner />
+              </div>
+            ) : workspaces.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {workspaces.map((workspace: WorkspaceCardProps) => (
+                  <WorkspaceCard
+                    key={workspace._id}
+                    _id={workspace._id}
+                    name={workspace.name}
+                    description={workspace.description}
+                    members={workspace.members}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-gray-500 text-sm p-3">
+                No workspaces found.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
