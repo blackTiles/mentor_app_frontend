@@ -1,8 +1,12 @@
 export interface Assignment {
-    id: string;
+    _id: string;
     title: string;
     description: string;
-    dueDate: Date;
-    teacherId: string;
-    studentIds: string[];
+    course?: string;
+    dueDate: string;
+    totalPoints?: number;
+    attachments?: string[];
+    teacher?: any;
+    students?: any[];
+    workspace: string;
 }

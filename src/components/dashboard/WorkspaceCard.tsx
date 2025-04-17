@@ -91,7 +91,7 @@ export default function WorkspaceCard({
                     alt={member.name}
                   />
                   <AvatarFallback>
-                    {member.name
+                    {member?.name
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}

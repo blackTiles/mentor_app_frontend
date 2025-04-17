@@ -14,7 +14,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Settings } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -47,9 +47,9 @@ const Header: React.FC = () => {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="bg-gray-800 text-white px-6 py-3">
+    <nav className="bg-gray-800 text-white px-6 py-3 sticky top-0 left-0 right-0 z-10 shadow-md">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold">SkillsBridge</h1>
           <div className="hidden space-x-4">
             {location.pathname.includes("/dashboard") &&

@@ -10,6 +10,7 @@ import API from "@/lib/axios/instance";
 import Spinner from "@/components/loaders/spinner";
 import { WorkspaceCardProps } from "@/components/dashboard/WorkspaceCard";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
+import { useAuth } from "@/context/AuthContext";
 
 const mockStudents = [
   {
@@ -51,6 +52,8 @@ const mockStudents = [
 ];
 
 const Overview = () => {
+  const { user } = useAuth();
+  const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
   const { workspaces, setWorkspaces } = useWorkspaceStore((state) => state);
   const [searchQuery, setSearchQuery] = useState("");
   // const [workspaces, setWorkspaces] = useState([]);
@@ -83,6 +86,38 @@ const Overview = () => {
 
   return (
     <>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div className="pl-2">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Welcome {user.name}
+          </h1>
+          <p className="text-gray-600">
+            Manage your students and track their progress
+          </p>
+        </div>
+        {/* <div className="mt-4 md:mt-0 flex space-x-3"> */}
+          {/* <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={18}
+              />
+              <Input
+                placeholder="Search students..."
+                className="pl-10 bg-white border-gray-300 w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div> */}
+          {/* <Button
+              onClick={() => setShowWorkspaceModal(true)}
+              className="bg-gray-800 hover:bg-gray-700"
+            >
+              <Users size={16} className="mr-0" />
+              Create New Workspace
+            </Button> */}
+        {/* </div> */}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-white">
           <CardHeader className="pb-2">
@@ -178,39 +213,37 @@ const Overview = () => {
       </Card> */}
 
       {/* recent workspaces  */}
-      <Card className="bg-white mt-4">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium text-gray-800">
+      <div className="mt-4 sm:mt-12">
+        <div className="pb-2 pl-2">
+          <h1 className="text-2xl font-bold text-gray-800">
             Recent Workspaces
-          </CardTitle>
-          <CardDescription>Your recently active workspaces</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="w-full h-full">
-            {loadingWorkspaces ? (
-              <div className="w-full mx-auto flex justify-center items-center h-32">
-                <Spinner />
-              </div>
-            ) : workspaces.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workspaces.map((workspace: WorkspaceCardProps) => (
-                  <WorkspaceCard
-                    key={workspace._id}
-                    _id={workspace._id}
-                    name={workspace.name}
-                    description={workspace.description}
-                    members={workspace.members}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-gray-500 text-sm p-3">
-                No workspaces found.
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </h1>
+          <p className="text-gray-600">Your recently active workspaces</p>
+        </div>
+        <div className="w-full h-full">
+          {loadingWorkspaces ? (
+            <div className="w-full mx-auto flex justify-center items-center h-32">
+              <Spinner />
+            </div>
+          ) : workspaces.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {workspaces.map((workspace: WorkspaceCardProps) => (
+                <WorkspaceCard
+                  key={workspace._id}
+                  _id={workspace._id}
+                  name={workspace.name}
+                  description={workspace.description}
+                  members={workspace.members}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-gray-500 text-sm p-3">
+              No workspaces found.
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 };

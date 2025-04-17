@@ -76,9 +76,10 @@ const CreateWorkspace = ({
         "/workspace/create-workspace",
         workspaceData
       );
-      if (response.status === 200) {
+      if (response.data.success) {
         const newWorkspace: WorkspaceCardProps = response.data.workspace;
         const allWorkspaces = [...workspaces, newWorkspace];
+        console.log("New workspace created:", allWorkspaces);
         setWorkspaces(allWorkspaces); // Update the workspace store with the new workspace
       }
       handleClose(); // Close the modal after successful creation

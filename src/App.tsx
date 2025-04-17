@@ -10,14 +10,22 @@ import SignupPage from "@/pages/auth/signup";
 import EmailVerificationPage from "./pages/dashboard";
 import AuthLayout from "@/pages/auth/layout";
 import Workspace from "@/pages/dashboard/workspace";
+import Sidebar from "@/components/layout/Sidebar";
+import { useAuth } from "@/context/AuthContext";
 
 const App = () => {
+  const { isAuthenticated } = useAuth();
   return (
     <Router>
-      <div className="flex flex-col h-screen bg-gray-100">
+      <div className="flex flex-col h-screen bg-gray-100 relative">
         <Header />
-        <div className="flex flex-1">
+        <div className="flex flex-1 overflow-hidden">
           {/* <Sidebar /> */}
+          {isAuthenticated && (
+            <div className="hidden md:block w-64 bg-gray-800 text-white">
+              <Sidebar />
+            </div>
+          )}
           <main className="flex-1">
             <Routes>
               <Route
@@ -37,6 +45,10 @@ const App = () => {
                 path="/dashboard/mentor/*"
                 element={<TeacherDashboard />}
               />
+              {/* <Route
+                path="dashboard/mentor/workspaces"
+                element={<Workspace />}
+              /> */}
               <Route
                 path="/dashboard/workspaces/:workspaceId"
                 element={<Workspace />}
@@ -51,7 +63,7 @@ const App = () => {
             </Routes>
           </main>
         </div>
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </Router>
   );
