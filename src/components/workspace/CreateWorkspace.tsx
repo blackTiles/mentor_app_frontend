@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 import Spinner from "@/components/loaders/spinner";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
-import { WorkspaceCardProps } from "../WorkspaceCard";
+import { WorkspaceCardProps } from "./WorkspaceCard";
 
 interface Student {
   id: number;
@@ -76,6 +76,7 @@ const CreateWorkspace = ({
         "/workspace/create-workspace",
         workspaceData
       );
+      console.log("Response from API:", response.data);
       if (response.data.success) {
         const newWorkspace: WorkspaceCardProps = response.data.workspace;
         const allWorkspaces = [...workspaces, newWorkspace];

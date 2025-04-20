@@ -1,14 +1,18 @@
 import { create } from "zustand";
-import { WorkspaceCardProps } from "@/components/dashboard/WorkspaceCard";
+import { WorkspaceProps } from "@/components/workspace/WorkspaceCard";
 
 export const useWorkspaceStore = create<{
-  workspaces: WorkspaceCardProps[];
+  workspaces: WorkspaceProps[];
+  workspace: WorkspaceProps | null;
+  setWorkspace: (workspace: WorkspaceProps) => void;
   loadingWorkspaces: boolean;
-  setWorkspaces: (workspaces: WorkspaceCardProps[]) => void;
+  setWorkspaces: (workspaces: WorkspaceProps[]) => void;
   setLoadingWorkspaces: (loading: boolean) => void;
 }>((set) => ({
   workspaces: [],
   loadingWorkspaces: true,
   setWorkspaces: (workspaces) => set({ workspaces }),
+  workspace: null,
+  setWorkspace: (workspace) => set({ workspace }),
   setLoadingWorkspaces: (loading) => set({ loadingWorkspaces: loading }),
 }));

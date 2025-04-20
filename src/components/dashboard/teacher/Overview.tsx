@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Calendar, Users } from "lucide-react";
 import { CardDescription } from "@/components/ui/card";
-import WorkspaceCard from "@/components/dashboard/WorkspaceCard";
+import WorkspaceCard from "@/components/workspace/WorkspaceCard";
 import API from "@/lib/axios/instance";
 import Spinner from "@/components/loaders/spinner";
-import { WorkspaceCardProps } from "@/components/dashboard/WorkspaceCard";
+import { WorkspaceCardProps } from "@/components/workspace/WorkspaceCard";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 
 const mockStudents = [

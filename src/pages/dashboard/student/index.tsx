@@ -1,25 +1,31 @@
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Overview from "@/components/dashboard/student/Overview";
-import Mentor from "@/components/dashboard/student/Mentor";
-import { useLocation, useNavigate } from "react-router-dom";
-import Courses from "@/components/dashboard/student/Courses";
-import Messages from "@/components/dashboard/student/Messages";
+import { useNavigate } from "react-router-dom";
+import Overview from "@/pages/dashboard/student/overview";
+import Messages from "@/components/dashboard/teacher/Messages";
+import Students from "@/components/dashboard/teacher/Students";
+import Schedule from "@/components/dashboard/teacher/Schedule";
 import { useAuth } from "@/context/AuthContext";
+import Workspaces from "@/pages/dashboard/student/workspaces";
+import Workspace from "@/pages/dashboard/student/workspaces/workspace";
 
 const tabList = [
   { name: "Overview", path: "overview", element: <Overview /> },
-  { name: "Courses", path: "courses", element: <Courses /> },
-  { name: "My Mentor", path: "mentor", element: <Mentor /> },
+  { name: "Workspaces", path: "workspaces", element: <Workspaces /> },
+  {
+    name: "Workspace",
+    path: "workspaces/:workspaceId",
+    element: <Workspace />,
+  },
+  { name: "Courses", path: "courses", element: <div>Courses</div> },
+  { name: "Students", path: "students", element: <Students /> },
   { name: "Messages", path: "messages", element: <Messages /> },
+  { name: "Schedule", path: "schedule", element: <Schedule /> },
 ];
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
-  const tabPath = location.pathname.split("/")[3];
   const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
@@ -47,47 +53,16 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="h-screen bg-gray-100 overflow-y-scroll pb-20">
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Student Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Track your progress and connect with your mentor
-          </p>
-        </div>
-
-        {/* Dashboard Tabs */}
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="bg-gray-200">
-            {tabList.map((tab) => (
-              <TabsTrigger
-                key={tab.path}
-                value={tab.path}
-                onClick={() => navigate(`/dashboard/student/${tab.path}`)}
-              >
-                {tab.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <TabsContent
-            value={tabPath ? tabPath : "overview"}
-            className="space-y-4"
-          >
-            <Routes>
-              <Route path="/" element={<Overview />} />
-              {tabList.map((tab) => (
-                <Route key={tab.path} path={tab.path} element={tab.element} />
-              ))}
-            </Routes>
-          </TabsContent>
-        </Tabs>
+      <div className="container mx-auto">
+        <Routes>
+          <Route path="/" element={<Overview />} />
+          {tabList.map((tab) => (
+            <Route key={tab.path} path={tab.path} element={tab.element} />
+          ))}
+        </Routes>
       </div>
-      {/* routes  */}
     </div>
   );
 };

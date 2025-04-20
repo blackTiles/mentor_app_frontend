@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import { useLocation, useNavigate } from "react-router-dom";
-import Overview from "@/pages/dashboard/mentor/Overview";
+import { useNavigate } from "react-router-dom";
+import Overview from "@/pages/dashboard/mentor/overview";
 import Messages from "@/components/dashboard/teacher/Messages";
 import Students from "@/components/dashboard/teacher/Students";
 import Schedule from "@/components/dashboard/teacher/Schedule";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Search, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import CreateWorkspace from "@/components/dashboard/teacher/CreateWorkspace";
-import Workspaces from "@/pages/dashboard/mentor/Workspaces";
+import Workspaces from "@/pages/dashboard/mentor/workspaces";
+import Workspace from "@/pages/dashboard/mentor/workspaces/workspace";
 
 const tabList = [
   { name: "Overview", path: "overview", element: <Overview /> },
   { name: "Workspaces", path: "workspaces", element: <Workspaces /> },
+  {
+    name: "Workspace",
+    path: "workspaces/:workspaceId",
+    element: <Workspace />,
+  },
+  { name: "Courses", path: "courses", element: <div>Courses</div> },
   { name: "Students", path: "students", element: <Students /> },
   { name: "Messages", path: "messages", element: <Messages /> },
   { name: "Schedule", path: "schedule", element: <Schedule /> },
@@ -23,12 +25,8 @@ const tabList = [
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
-  const tabPath = location.pathname.split("/")[3];
-  const [searchQuery, setSearchQuery] = useState("");
   const [loadingUser, setLoadingUser] = useState(true);
-  const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -57,10 +55,7 @@ const TeacherDashboard = () => {
   return (
     <div className="h-screen bg-gray-100 overflow-y-scroll pb-20">
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        
-        
-
+      <div className="container mx-auto">
         <Routes>
           <Route path="/" element={<Overview />} />
           {tabList.map((tab) => (

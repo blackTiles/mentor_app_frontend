@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "@/lib/axios/instance";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
@@ -40,19 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertCircle,
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  Clock,
-  FileText,
-  Home,
-  Users,
-  PlusCircle,
-  Settings,
-  Trash2,
-} from "lucide-react";
+import { Clock, FileText, Users, PlusCircle, Trash2 } from "lucide-react";
 import Spinner from "@/components/loaders/spinner";
 
 interface Attachment {
@@ -60,10 +48,12 @@ interface Attachment {
   fileUrl: string;
 }
 
-export default function MentorDashboard() {
+export default function Workspace() {
   const navigate = useNavigate();
   const { workspaceId } = useParams<{ workspaceId: string }>();
-  const { workspaces } = useWorkspaceStore((state) => state);
+  const { workspace, setWorkspace } = useWorkspaceStore(
+    (state) => state
+  );
   const {
     assignments,
     setAssignments,
@@ -79,45 +69,6 @@ export default function MentorDashboard() {
     { id: "1", name: "Web Development" },
     { id: "2", name: "Data Science" },
     { id: "3", name: "Mobile App Development" },
-  ];
-
-  // const workspaces = [
-  //   { id: "1", name: "Frontend Team" },
-  //   { id: "2", name: "Backend Team" },
-  //   { id: "3", name: "Full Stack" },
-  // ];
-
-  const tasks = [
-    {
-      id: "1",
-      title: "Create a Landing Page",
-      description: "Design and implement a responsive landing page using React",
-      course: "Web Development",
-      workspace: "Frontend Team",
-      dueDate: "2025-04-25",
-      totalPoints: 100,
-      attachments: [{ name: "wireframe.pdf", fileUrl: "/files/wireframe.pdf" }],
-    },
-    {
-      id: "2",
-      title: "API Integration",
-      description: "Implement REST API endpoints for user authentication",
-      course: "Web Development",
-      workspace: "Backend Team",
-      dueDate: "2025-04-30",
-      totalPoints: 150,
-      attachments: [],
-    },
-    {
-      id: "3",
-      title: "Data Visualization Dashboard",
-      description: "Create interactive charts using React and D3.js",
-      course: "Data Science",
-      workspace: "Frontend Team",
-      dueDate: "2025-05-05",
-      totalPoints: 120,
-      attachments: [{ name: "mockup.png", fileUrl: "/files/mockup.png" }],
-    },
   ];
 
   const addAttachment = () => {
@@ -152,9 +103,9 @@ export default function MentorDashboard() {
       };
 
       const response = await API.post("/assignment/create-assignment", data);
-      console.log(response)
+      console.log(response);
       if (response.data.success === true) {
-        console.log("caled")
+        console.log("caled");
         // Update the assignments state with the new assignment
         const newAssignment = response.data.assignment as Assignment;
         setAssignments([...assignments, newAssignment]);
@@ -167,35 +118,23 @@ export default function MentorDashboard() {
     }
   };
 
-  const fetchWorkspaceData = async () => {
-    try {
-      const response = await API.get(
-        `/workspace/get-workspaces/${workspaceId}`
-      );
-      if (response.status === 200) {
-        console.log("Workspace data:", response.data);
-      }
-    } catch (error) {
-      console.error("Error fetching workspace data:", error);
-    }
-  };
-
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       setLoadingAssignments(true);
       const response = await API.get(
         `/assignment/get-assignments/${workspaceId}`
       );
-      console.log(response);
       if (response.status === 200) {
-        setAssignments(response.data.assignments);
+        setWorkspace(response.data?.workspace);
+        setAssignments(response.data?.workspace?.assignments);
       }
     } catch (error) {
       console.error("Error fetching assignments:", error);
     } finally {
       setLoadingAssignments(false);
     }
-  };
+  }, [workspaceId, setAssignments, setLoadingAssignments]);
+
   useEffect(() => {
     fetchAssignments();
   }, [setAssignments]);
@@ -203,14 +142,15 @@ export default function MentorDashboard() {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      
 
       {/* Main content */}
       <div className="flex-1 overflow-auto">
         <header className="bg-white shadow">
           <div className="max-w-7xl mx-auto py-4 px-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-800">Assignments</h1>
+              <h1 className="text-2xl font-bold text-gray-800">
+                {workspace?.name || "Workspace Overview"}
+              </h1>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-gray-800 hover:bg-gray-700">
@@ -403,7 +343,9 @@ export default function MentorDashboard() {
               <CardContent>
                 <div className="flex items-center">
                   <Users className="h-10 w-10 text-gray-500" />
-                  <span className="text-3xl font-bold ml-4"></span>
+                  <span className="text-3xl font-bold ml-4">
+                    {workspace?.members?.length || 0}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -417,52 +359,72 @@ export default function MentorDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Course</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Points</TableHead>
-                    <TableHead>Attachments</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assignments.map((task: Assignment) => (
-                    <TableRow key={task._id}>
-                      <TableCell className="font-medium">
-                        {task.title}
-                      </TableCell>
-                      <TableCell>{"Course Not Mentioned"}</TableCell>
-                      <TableCell>
-                        {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString("en-US", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
-                            })
-                          : "No due date"}
-                      </TableCell>
-                      <TableCell>{task.totalPoints}</TableCell>
-                      <TableCell>{5}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm">
-                            <FileText size={16} />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 size={16} />
-                          </Button>
-                        </div>
-                      </TableCell>
+              {loadingAssignments ? (
+                <div className="flex items-center justify-center h-32">
+                  <Spinner />
+                </div>
+              ) : !loadingAssignments && assignments.length === 0 ? (
+                <div className="flex items-center justify-center h-32 flex-col gap-4">
+                  <p className="text-gray-500">No assignments found.</p>
+                  <Button
+                    className="bg-gray-800 hover:bg-gray-700"
+                    onClick={() => setIsDialogOpen(true)}
+                  >
+                    <PlusCircle size={16} className="mr-2" />
+                    Create Assignment
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Course</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Points</TableHead>
+                      <TableHead>Attachments</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {assignments.map((task: Assignment) => (
+                      <TableRow key={task._id}>
+                        <TableCell className="font-medium">
+                          {task.title}
+                        </TableCell>
+                        <TableCell>{"Course Not Mentioned"}</TableCell>
+                        <TableCell>
+                          {task.dueDate
+                            ? new Date(task.dueDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }
+                              )
+                            : "No due date"}
+                        </TableCell>
+                        <TableCell>{task.totalPoints}</TableCell>
+                        <TableCell>{5}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm">
+                              <FileText size={16} />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </main>

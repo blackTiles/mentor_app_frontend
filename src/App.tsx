@@ -1,15 +1,13 @@
 // import { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Header from "./components/layout/Header";
-// import Sidebar from "./components/layout/Sidebar";
-import Footer from "./components/layout/Footer";
+// import Footer from "./components/layout/Footer";
 import TeacherDashboard from "@/pages/dashboard/mentor";
 import StudentDashboard from "@/pages/dashboard/student";
 import LoginPage from "@/pages/auth/login";
 import SignupPage from "@/pages/auth/signup";
 import EmailVerificationPage from "./pages/dashboard";
 import AuthLayout from "@/pages/auth/layout";
-import Workspace from "@/pages/dashboard/workspace";
 import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/context/AuthContext";
 
@@ -45,15 +43,6 @@ const App = () => {
                 path="/dashboard/mentor/*"
                 element={<TeacherDashboard />}
               />
-              {/* <Route
-                path="dashboard/mentor/workspaces"
-                element={<Workspace />}
-              /> */}
-              <Route
-                path="/dashboard/workspaces/:workspaceId"
-                element={<Workspace />}
-              />
-
               <Route
                 path="/dashboard/student/*"
                 element={<StudentDashboard />}

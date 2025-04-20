@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface Members {
   _id: string;
@@ -17,11 +18,19 @@ interface Members {
   picture?: string;
 }
 
-export interface WorkspaceCardProps {
+export interface WorkspaceProps {
   _id?: string;
   name: string;
   description?: string;
   members: Members[];
+  owner?: {
+    _id: string;
+    name: string;
+    email: string;
+    picture?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function WorkspaceCard({
@@ -60,13 +69,14 @@ export default function WorkspaceCard({
       picture: "/placeholder.svg?height=40&width=40",
     },
   ],
-}: WorkspaceCardProps) {
+}: WorkspaceProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   return (
     <Card
       className="w-full"
       onClick={
-        () => navigate(`/dashboard/workspaces/${_id}`) // Ensure _id is defined or handle undefined case
+        () => navigate(`/dashboard/${user.role}/workspaces/${_id}`) // Ensure _id is defined or handle undefined case
       }
     >
       <CardHeader>
@@ -92,7 +102,7 @@ export default function WorkspaceCard({
                   />
                   <AvatarFallback>
                     {member?.name
-                      .split(" ")
+                      ?.split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </AvatarFallback>
