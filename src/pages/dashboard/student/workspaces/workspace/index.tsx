@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Clock, FileText, Users, PlusCircle, Trash2 } from "lucide-react";
+import { Clock, FileText, Users, PlusCircle, Trash2, FilePen } from "lucide-react";
 import Spinner from "@/components/loaders/spinner";
 
 interface Attachment {
