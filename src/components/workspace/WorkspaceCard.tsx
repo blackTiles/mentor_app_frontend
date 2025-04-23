@@ -10,27 +10,13 @@ import {
 import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { WorkspaceProps } from "@/types/workspace";
 
 interface Members {
   _id: string;
   name: string;
   email: string;
   picture?: string;
-}
-
-export interface WorkspaceProps {
-  _id?: string;
-  name: string;
-  description?: string;
-  members: Members[];
-  owner?: {
-    _id: string;
-    name: string;
-    email: string;
-    picture?: string;
-  };
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export default function WorkspaceCard({
@@ -103,7 +89,7 @@ export default function WorkspaceCard({
                   <AvatarFallback>
                     {member?.name
                       ?.split(" ")
-                      .map((n) => n[0])
+                      .map((n: string) => n[0])
                       .join("")}
                   </AvatarFallback>
                 </Avatar>

@@ -12,14 +12,14 @@ import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/context/AuthContext";
 
 const App = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   return (
     <Router>
       <div className="flex flex-col h-screen bg-gray-100 relative">
         <Header />
         <div className="flex flex-1 overflow-hidden">
           {/* <Sidebar /> */}
-          {isAuthenticated && (
+          {(isAuthenticated && user?.role !== "none" && user?.emailVerified === true) && (
             <div className="hidden md:block w-64 bg-gray-800 text-white">
               <Sidebar />
             </div>

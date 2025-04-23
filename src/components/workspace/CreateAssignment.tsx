@@ -3,6 +3,7 @@ import { useState } from "react";
 import { uploadFile } from "@/utils/uploadFile";
 import API from "@/lib/axios/instance";
 import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
+import Spinner from "../loaders/spinner";
 import { Assignment } from "@/types/assignment";
 import { Button } from "../ui/button";
 import {
@@ -51,6 +52,7 @@ const CreateAssignment = ({
     { name: string; fileUrl: string }[]
   >([]);
   const [uploadStatuses, setUploadStatuses] = useState<UploadingStatus[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const updateUploadStatus = (index: number, status: FileUploadStatusType) => {
     setUploadStatuses((prev) => {
@@ -95,6 +97,7 @@ const CreateAssignment = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setUploading(true);
     try {
       // upload files to S3 bucket one by one
       const uploadedFiles = await Promise.all(
@@ -104,17 +107,17 @@ const CreateAssignment = ({
             ...prev,
             { name, status: "Uploading", progress: 0 },
           ]);
-      
+
           const fileUrl = await uploadFile(file, "assignments", (prog) =>
             updateProgress(index, prog as number)
           );
-      
+
           setAttachments((prev) => {
             const updated = [...prev];
             updated[index].fileUrl = fileUrl;
             return updated;
           });
-      
+
           updateUploadStatus(index, "Uploaded");
           return fileUrl;
         })
@@ -147,11 +150,12 @@ const CreateAssignment = ({
       console.log("Assignment created successfully:", response.data);
     } catch (error) {
       console.log(error);
-    }finally{
-        // Reset the upload status after submission
-        setUploadStatuses([]);
-        setFiles([]); // Clear files after submission
-        setAttachments([]); // Clear attachments after submission
+    } finally {
+      setUploading(false);
+      // Reset the upload status after submission
+      setUploadStatuses([]);
+      setFiles([]); // Clear files after submission
+      setAttachments([]); // Clear attachments after submission
     }
   };
 
@@ -284,55 +288,56 @@ const CreateAssignment = ({
                 </Button>
               </div>
               {attachments.length > 0 && (
-  <div className="mt-2 space-y-2">
-    {attachments.map((attachment, index) => {
-      const status = uploadStatuses[index]?.status;
-      const progress = uploadStatuses[index]?.progress || 0;
-      return (
-        <div
-          key={index}
-          className="relative bg-gray-100 rounded p-2 flex justify-between items-center"
-        >
-          {/* Background bar */}
-          <div
-            className={`absolute top-0 left-0 h-full ${
-              status === "Uploaded"
-                ? "bg-green-300"
-                : status === "Uploading"
-                ? "bg-yellow-300"
-                : "bg-gray-300"
-            } rounded transition-all`}
-            style={{
-              width: `${status === "Uploaded" ? 100 : progress || 0}%`,
-              zIndex: 0,
-            }}
-          ></div>
-          {/* Content */}
-          <div className="flex items-center justify-between w-full z-10">
-            <span className="text-sm text-gray-800 font-medium">
-              {attachment.name}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">
-                {status === "Uploading"
-                  ? `${progress?.toFixed(0)}%`
-                  : status || "Queue"}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeAttachment(index)}
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    })}
-  </div>
-)}
-
+                <div className="mt-2 space-y-2">
+                  {attachments.map((attachment, index) => {
+                    const status = uploadStatuses[index]?.status;
+                    const progress = uploadStatuses[index]?.progress || 0;
+                    return (
+                      <div
+                        key={index}
+                        className="relative bg-gray-100 rounded p-2 flex justify-between items-center"
+                      >
+                        {/* Background bar */}
+                        <div
+                          className={`absolute top-0 left-0 h-full ${
+                            status === "Uploaded"
+                              ? "bg-green-300"
+                              : status === "Uploading"
+                              ? "bg-yellow-300"
+                              : "bg-gray-300"
+                          } rounded transition-all`}
+                          style={{
+                            width: `${
+                              status === "Uploaded" ? 100 : progress || 0
+                            }%`,
+                            zIndex: 0,
+                          }}
+                        ></div>
+                        {/* Content */}
+                        <div className="flex items-center justify-between w-full z-10">
+                          <span className="text-sm text-gray-800 font-medium">
+                            {attachment.name}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {status === "Uploading"
+                                ? `${progress?.toFixed(0)}%`
+                                : status || "Queue"}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeAttachment(index)}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -343,8 +348,12 @@ const CreateAssignment = ({
             >
               Cancel
             </Button>
-            <Button type="submit" className="bg-gray-800 hover:bg-gray-700">
-              Create Assignment
+            <Button
+              disabled={uploading}
+              type="submit"
+              className="bg-gray-800 hover:bg-gray-700"
+            >
+              {uploading ? <Spinner size="h-5 w-5" /> : "Create Assignment"}
             </Button>
           </DialogFooter>
         </form>

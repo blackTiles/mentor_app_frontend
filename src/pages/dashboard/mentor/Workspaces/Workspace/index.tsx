@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "@/lib/axios/instance";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
 import { Assignment } from "@/types/assignment";
 import CreateAssignment from "@/components/workspace/CreateAssignment";
+import DeleteConfirmationPopup from "@/components/popups/DeleteConfirmationPopup";
 import {
   Card,
   CardContent,
@@ -28,9 +29,8 @@ import {
   Users,
   PlusCircle,
   Trash2,
-  File,
-  FilePen,
   FilePenLine,
+  PlusIcon,
 } from "lucide-react";
 import Spinner from "@/components/loaders/spinner";
 
@@ -47,6 +47,37 @@ export default function Workspace() {
     setLoadingAssignments,
   } = useAssignmentStore((state) => state);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteConfirmationPopupOpen, setIsDeleteConfirmationPopupOpen] =
+    useState(false);
+  const [deleteAssignmentId, setDeleteAssignmentId] = useState<string>("");
+  const [deletingAssignment, setDeletingAssignment] = useState(false);
+
+  const handleDeleteButtonClick = (assignmentId: string) => {
+    setDeleteAssignmentId(assignmentId);
+    setIsDeleteConfirmationPopupOpen(true);
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    setDeletingAssignment(true);
+    try {
+      const response = await API.delete(
+        `/assignment/delete-assignment/${assignmentId}`
+      );
+      if (response.data.success) {
+        console.log("Assignment deleted successfully:", response.data);
+        const updatedAssignments = assignments.filter(
+          (assignment: Assignment) => assignment._id !== assignmentId
+        );
+        setAssignments(updatedAssignments);
+        setDeleteAssignmentId("");
+      }
+    } catch (error) {
+      console.error("Error deleting assignment:", error);
+    } finally {
+      setDeletingAssignment(false);
+      setIsDeleteConfirmationPopupOpen(false);
+    }
+  };
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -126,10 +157,11 @@ export default function Workspace() {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-2 flex justify-between items-center">
                 <CardTitle className="text-lg font-medium">
                   Total Members
                 </CardTitle>
+                <PlusCircle size={20} className="text-gray-700 cursor-pointer hover:text-gray-500" />
               </CardHeader>
               <CardContent>
                 <div className="flex items-center">
@@ -225,9 +257,10 @@ export default function Workspace() {
                               size="icon"
                               variant="ghost"
                               className="cursor-pointer"
+                              onClick={() => handleDeleteButtonClick(task._id)}
+                              onMouseDown={(e) => e.stopPropagation()}
                             >
                               <Trash2 color="red" size={16} />
-                              {/* Delete */}
                             </Button>
                           </div>
                         </TableCell>
@@ -240,6 +273,18 @@ export default function Workspace() {
           </Card>
         </main>
       </div>
+      <DeleteConfirmationPopup
+        title="Delete Assignment"
+        description={`Are you sure you want to delete the assignment "${
+          assignments.find(
+            (assignment) => assignment._id === deleteAssignmentId
+          )?.title
+        }"?`}
+        onConfirm={() => handleDeleteAssignment(deleteAssignmentId)}
+        isDeleteConfirmationPopupOpen={isDeleteConfirmationPopupOpen}
+        setIsDeleteConfirmationPopupOpen={setIsDeleteConfirmationPopupOpen}
+        deletingAssignment={deletingAssignment}
+      />
     </div>
   );
 }
