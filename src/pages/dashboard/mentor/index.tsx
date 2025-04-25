@@ -5,10 +5,10 @@ import Messages from "@/components/dashboard/mentor/Messages";
 import Students from "@/components/dashboard/mentor/Students";
 import Schedule from "@/components/dashboard/mentor/Schedule";
 import { useAuth } from "@/context/AuthContext";
-import Overview from "@/pages/dashboard/mentor/overview";
-import Workspaces from "@/pages/dashboard/mentor/workspaces";
-import Workspace from "@/pages/dashboard/mentor/workspaces/workspace";
-import AssignmentDetailsPage from "@/pages/dashboard/mentor/workspaces/workspace/assignment";
+import Overview from "@/components/dashboard/mentor/overview";
+import Workspaces from "@/components/dashboard/mentor/workspaces";
+import Workspace from "@/components/dashboard/mentor/workspaces/workspace";
+import AssignmentDetailsPage from "@/components/dashboard/mentor/workspaces/workspace/assignment";
 
 const tabList = [
   { name: "Overview", path: "overview", element: <Overview /> },
