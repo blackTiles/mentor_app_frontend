@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import Overview from "@/pages/dashboard/mentor/overview";
 import Messages from "@/components/dashboard/teacher/Messages";
 import Students from "@/components/dashboard/teacher/Students";
 import Schedule from "@/components/dashboard/teacher/Schedule";
 import { useAuth } from "@/context/AuthContext";
-import Workspaces from "@/pages/dashboard/mentor/workspaces";
-import Workspace from "@/pages/dashboard/mentor/workspaces/workspace";
-import AssignmentDetailsPage from "@/pages/dashboard/mentor/workspaces/workspace/assignment";
+import Overview from "./overview";
+import Workspaces from "./workspaces";
+import Workspace from "./workspaces/workspace";
+import AssignmentDetailsPage from "./workspaces/workspace/assignment";
 
 const tabList = [
   { name: "Overview", path: "overview", element: <Overview /> },
