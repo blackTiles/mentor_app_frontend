@@ -47,7 +47,6 @@ const App = () => {
                 path="/dashboard/student/*"
                 element={<StudentDashboard />}
               />
-
               {/* Add more routes as needed */}
             </Routes>
           </main>

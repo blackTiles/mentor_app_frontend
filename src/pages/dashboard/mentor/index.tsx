@@ -8,6 +8,7 @@ import Schedule from "@/components/dashboard/teacher/Schedule";
 import { useAuth } from "@/context/AuthContext";
 import Workspaces from "@/pages/dashboard/mentor/workspaces";
 import Workspace from "@/pages/dashboard/mentor/workspaces/workspace";
+import AssignmentDetailsPage from "@/pages/dashboard/mentor/workspaces/workspace/assignment";
 
 const tabList = [
   { name: "Overview", path: "overview", element: <Overview /> },
@@ -16,6 +17,11 @@ const tabList = [
     name: "Workspace",
     path: "workspaces/:workspaceId",
     element: <Workspace />,
+  },
+  {
+    name: "Assignment",
+    path: "workspaces/:workspaceId/:assignmentId",
+    element: <AssignmentDetailsPage />,
   },
   { name: "Courses", path: "courses", element: <div>Courses</div> },
   { name: "Students", path: "students", element: <Students /> },

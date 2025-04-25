@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "@/lib/axios/instance";
+import { useQuery } from "@tanstack/react-query";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
 import { Assignment } from "@/types/assignment";
@@ -31,6 +32,7 @@ import {
   Trash2,
   FilePenLine,
   PlusIcon,
+  ArrowLeft,
 } from "lucide-react";
 import Spinner from "@/components/loaders/spinner";
 
@@ -90,22 +92,47 @@ export default function Workspace() {
         setWorkspace(response.data?.workspace);
         setAssignments(response.data?.workspace?.assignments);
       }
-    } catch (error) {
-      console.error("Error fetching assignments:", error);
-    } finally {
       setLoadingAssignments(false);
+      return response.data?.workspace?.assignments;
+    } catch (error) {
+      setLoadingAssignments(false);
+      throw new Error("Error fetching assignments: " + error);
     }
   }, [workspaceId, setAssignments, setLoadingAssignments]);
 
-  useEffect(() => {
-    fetchAssignments();
-  }, [setAssignments]);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["assignments", workspaceId], 
+    queryFn: fetchAssignments,
+    enabled: !!workspaceId,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    if (workspace) {
-      console.log("Workspace", workspace);
-    }
-  }, [workspaceId, workspace]);
+  // useEffect(() => {
+  //   fetchAssignments();
+  // }, [setAssignments]);
+
+  // useEffect(() => {
+  //   if (workspace) {
+  //     console.log("Workspace", workspace);
+  //   }
+  // }, [workspaceId, workspace]);
+
+  if(isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-500">Error fetching assignments.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -114,9 +141,18 @@ export default function Workspace() {
         <header className="bg-white shadow">
           <div className="max-w-7xl mx-auto py-4 px-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-800">
-                {workspace?.name || "Workspace Overview"}
-              </h1>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  className="p-0"
+                  onClick={() => window.history.back()}
+                >
+                  <ArrowLeft size={20} />
+                </Button>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  {workspace?.name || "Workspace Overview"}
+                </h1>
+              </div>
               <CreateAssignment
                 isDialogOpen={isDialogOpen}
                 setIsDialogOpen={setIsDialogOpen}
@@ -161,7 +197,10 @@ export default function Workspace() {
                 <CardTitle className="text-lg font-medium">
                   Total Members
                 </CardTitle>
-                <PlusCircle size={20} className="text-gray-700 cursor-pointer hover:text-gray-500" />
+                <PlusCircle
+                  size={20}
+                  className="text-gray-700 cursor-pointer hover:text-gray-500"
+                />
               </CardHeader>
               <CardContent>
                 <div className="flex items-center">
@@ -214,6 +253,11 @@ export default function Workspace() {
                       <TableRow
                         key={task._id}
                         className="hover:bg-gray-200 cursor-pointer"
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/mentor/workspaces/${workspaceId}/${task._id}`
+                          )
+                        }
                       >
                         <TableCell title={task?.title} className="font-medium">
                           {task.title?.length > 30
