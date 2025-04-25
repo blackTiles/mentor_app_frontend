@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 import API from "@/lib/axios/instance";
 import WorkspaceCard from "@/components/workspace/WorkspaceCard";
-import { WorkspaceProps } from "@/components/workspace/WorkspaceCard";
+import { WorkspaceProps } from "@/types/workspace";
 import Spinner from "@/components/loaders/spinner";
 import CreateWorkspace from "@/components/workspace/CreateWorkspace";
 import { Button } from "@/components/ui/button";

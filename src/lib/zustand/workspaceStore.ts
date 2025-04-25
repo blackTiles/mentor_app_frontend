@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { WorkspaceProps } from "@/components/workspace/WorkspaceCard";
+import { WorkspaceProps } from "@/types/workspace";
 
 export const useWorkspaceStore = create<{
   workspaces: WorkspaceProps[];

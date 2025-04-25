@@ -8,7 +8,7 @@ import { CardDescription } from "@/components/ui/card";
 import WorkspaceCard from "@/components/workspace/WorkspaceCard";
 import API from "@/lib/axios/instance";
 import Spinner from "@/components/loaders/spinner";
-import { WorkspaceCardProps } from "@/components/workspace/WorkspaceCard";
+import { WorkspaceProps } from "@/types/workspace";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 
 const mockStudents = [
@@ -193,7 +193,7 @@ const Overview = () => {
               </div>
             ) : workspaces.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workspaces.map((workspace: WorkspaceCardProps) => (
+                {workspaces.map((workspace: WorkspaceProps) => (
                   <WorkspaceCard
                     key={workspace._id}
                     _id={workspace._id}

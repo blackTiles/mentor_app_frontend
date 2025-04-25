@@ -9,7 +9,7 @@ import { CardDescription } from "@/components/ui/card";
 import WorkspaceCard from "@/components/workspace/WorkspaceCard";
 import API from "@/lib/axios/instance";
 import Spinner from "@/components/loaders/spinner";
-import { WorkspaceProps } from "@/components/workspace/WorkspaceCard";
+import { WorkspaceProps } from "@/types/workspace";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 
