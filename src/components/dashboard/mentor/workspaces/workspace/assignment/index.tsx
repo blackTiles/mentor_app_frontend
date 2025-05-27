@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import API from "@/lib/axios/instance";
 import { useQuery } from "@tanstack/react-query";
 import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
+import { S3_BASE_URL } from "@/constants/urls";
 import {
   Card,
   CardContent,
@@ -78,36 +79,34 @@ interface Submission {
   }> | null;
 }
 
-interface Assignment {
-  id: string;
-  title: string;
-  description: string;
-  workspace: {
-    id: string;
-    name: string;
-  };
-  course: {
-    id: string;
-    name: string;
-  };
-  teacher: {
-    id: string;
-    name: string;
-  };
-  dueDate: string;
-  totalPoints: number;
-  attachments: Array<{ name: string; fileUrl: string; size: string }>;
-  createdAt: string;
-  updatedAt: string;
-  status: "active" | "archived";
-}
+// interface Assignment {
+//   id: string;
+//   title: string;
+//   description: string;
+//   workspace: {
+//     id: string;
+//     name: string;
+//   };
+//   course: {
+//     id: string;
+//     name: string;
+//   };
+//   teacher: {
+//     id: string;
+//     name: string;
+//   };
+//   dueDate: string;
+//   totalPoints: number;
+//   attachments: Array<{ name: string; fileUrl: string; size: string }>;
+//   createdAt: string;
+//   updatedAt: string;
+//   status: "active" | "archived";
+// }
 
 export default function AssignmentDetailsPage() {
   const navigate = useNavigate();
   const { assignmentId } = useParams<{ assignmentId: string }>();
-  // const {assignment, setAssignment} = useAssignmentStore(
-  //   (state) => state
-  // );
+  const { assignment, setAssignment } = useAssignmentStore((state) => state);
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeSubmission, setActiveSubmission] = useState<Submission | null>(
     null
@@ -121,7 +120,8 @@ export default function AssignmentDetailsPage() {
         `/assignment/get-assignment/${assignmentId}`
       );
       if (response.status === 200) {
-        return response.data;
+        setAssignment(response.data.assignment);
+        return response?.data?.assignment;
       } else {
         throw new Error("Failed to fetch assignment details");
       }
@@ -139,41 +139,41 @@ export default function AssignmentDetailsPage() {
   });
 
   // Sample assignment data
-  const assignment: Assignment = {
-    id: "1",
-    title: "Create a Landing Page",
-    description:
-      "Design and implement a responsive landing page using React and Tailwind CSS. The landing page should include a hero section, features section, testimonials, and a contact form. Make sure to implement responsive design for mobile, tablet, and desktop views. Use React hooks for any interactive elements.",
-    workspace: {
-      id: "1",
-      name: "Frontend Team",
-    },
-    course: {
-      id: "1",
-      name: "Web Development",
-    },
-    teacher: {
-      id: "1",
-      name: "Professor Johnson",
-    },
-    dueDate: "2025-04-25T23:59:59",
-    totalPoints: 100,
-    attachments: [
-      {
-        name: "wireframe.pdf",
-        fileUrl: "/files/wireframe.pdf",
-        size: "1.2 MB",
-      },
-      {
-        name: "design_guidelines.docx",
-        fileUrl: "/files/design_guidelines.docx",
-        size: "890 KB",
-      },
-    ],
-    createdAt: "2025-04-10T14:30:00",
-    updatedAt: "2025-04-12T10:15:00",
-    status: "active",
-  };
+  // const assignment: Assignment = {
+  //   id: "1",
+  //   title: "Create a Landing Page",
+  //   description:
+  //     "Design and implement a responsive landing page using React and Tailwind CSS. The landing page should include a hero section, features section, testimonials, and a contact form. Make sure to implement responsive design for mobile, tablet, and desktop views. Use React hooks for any interactive elements.",
+  //   workspace: {
+  //     id: "1",
+  //     name: "Frontend Team",
+  //   },
+  //   course: {
+  //     id: "1",
+  //     name: "Web Development",
+  //   },
+  //   teacher: {
+  //     id: "1",
+  //     name: "Professor Johnson",
+  //   },
+  //   dueDate: "2025-04-25T23:59:59",
+  //   totalPoints: 100,
+  //   attachments: [
+  //     {
+  //       name: "wireframe.pdf",
+  //       fileUrl: "/files/wireframe.pdf",
+  //       size: "1.2 MB",
+  //     },
+  //     {
+  //       name: "design_guidelines.docx",
+  //       fileUrl: "/files/design_guidelines.docx",
+  //       size: "890 KB",
+  //     },
+  //   ],
+  //   createdAt: "2025-04-10T14:30:00",
+  //   updatedAt: "2025-04-12T10:15:00",
+  //   status: "active",
+  // };
 
   // Sample submissions data
   const submissions: Submission[] = [
@@ -365,6 +365,19 @@ export default function AssignmentDetailsPage() {
     closeSubmission();
   };
 
+  const downloadAttachment = async (attachmentName: string) => {
+    try {
+      const link = document.createElement("a");
+      link.href = `${S3_BASE_URL}/assignments/${attachmentName}`;
+      link.setAttribute("download", attachmentName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.log("Error downloading attachment:", error);
+    }
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <header className="bg-white shadow">
@@ -390,9 +403,11 @@ export default function AssignmentDetailsPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
-                  <CardTitle className="text-2xl">{assignment.title}</CardTitle>
+                  <CardTitle className="text-2xl">
+                    {assignment?.title}
+                  </CardTitle>
                   <CardDescription>
-                    {assignment.course.name} - {assignment.workspace.name}
+                    {assignment?.course?.name} - {assignment?.workspace?.name}
                   </CardDescription>
                 </div>
                 {!isEditMode ? (
@@ -426,7 +441,7 @@ export default function AssignmentDetailsPage() {
                     <div>
                       <h3 className="text-lg font-medium mb-2">Description</h3>
                       <div className="bg-gray-50 p-4 rounded-md">
-                        <p>{assignment.description}</p>
+                        <p>{assignment?.description}</p>
                       </div>
                     </div>
 
@@ -444,7 +459,8 @@ export default function AssignmentDetailsPage() {
                                 Due Date
                               </p>
                               <p className="text-sm text-gray-600">
-                                {formatDate(assignment.dueDate)}
+                                {assignment?.dueDate &&
+                                  formatDate(assignment.dueDate)}
                               </p>
                             </div>
                           </div>
@@ -458,7 +474,7 @@ export default function AssignmentDetailsPage() {
                                 Total Points
                               </p>
                               <p className="text-sm text-gray-600">
-                                {assignment.totalPoints} points
+                                {assignment?.totalPoints} points
                               </p>
                             </div>
                           </div>
@@ -472,7 +488,7 @@ export default function AssignmentDetailsPage() {
                                 Created By
                               </p>
                               <p className="text-sm text-gray-600">
-                                {assignment.teacher.name}
+                                {assignment?.teacher.name}
                               </p>
                             </div>
                           </div>
@@ -486,7 +502,8 @@ export default function AssignmentDetailsPage() {
                                 Created
                               </p>
                               <p className="text-sm text-gray-600">
-                                {formatDate(assignment.createdAt)}
+                                {assignment?.createdAt &&
+                                  formatDate(assignment.createdAt)}
                               </p>
                             </div>
                           </div>
@@ -500,7 +517,8 @@ export default function AssignmentDetailsPage() {
                                 Last Updated
                               </p>
                               <p className="text-sm text-gray-600">
-                                {formatDate(assignment.updatedAt)}
+                                {assignment?.updatedAt &&
+                                  formatDate(assignment.updatedAt)}
                               </p>
                             </div>
                           </div>
@@ -511,7 +529,8 @@ export default function AssignmentDetailsPage() {
                         <h3 className="text-lg font-medium mb-2">
                           Attachments
                         </h3>
-                        {assignment.attachments.length > 0 ? (
+                        {assignment?.attachments &&
+                        assignment.attachments.length > 0 ? (
                           <div className="bg-gray-50 p-4 rounded-md">
                             <div className="space-y-2">
                               {assignment.attachments.map(
@@ -534,7 +553,13 @@ export default function AssignmentDetailsPage() {
                                         </p>
                                       </div>
                                     </div>
-                                    <Button variant="ghost" size="sm">
+                                    <Button
+                                      onClick={() =>
+                                        downloadAttachment(attachment.name)
+                                      }
+                                      variant="ghost"
+                                      size="sm"
+                                    >
                                       <Download size={16} />
                                     </Button>
                                   </div>
@@ -555,14 +580,14 @@ export default function AssignmentDetailsPage() {
                     <div className="grid gap-4">
                       <div>
                         <Label htmlFor="title">Assignment Title</Label>
-                        <Input id="title" defaultValue={assignment.title} />
+                        <Input id="title" defaultValue={assignment?.title} />
                       </div>
                       <div>
                         <Label htmlFor="description">Description</Label>
                         <Textarea
                           id="description"
                           rows={5}
-                          defaultValue={assignment.description}
+                          defaultValue={assignment?.description}
                         />
                       </div>
                     </div>
@@ -573,9 +598,13 @@ export default function AssignmentDetailsPage() {
                         <Input
                           id="dueDate"
                           type="datetime-local"
-                          defaultValue={new Date(assignment.dueDate)
-                            .toISOString()
-                            .slice(0, 16)}
+                          defaultValue={
+                            assignment?.dueDate
+                              ? new Date(assignment.dueDate)
+                                  .toISOString()
+                                  .slice(0, 16)
+                              : ""
+                          }
                         />
                       </div>
                       <div>
@@ -583,7 +612,7 @@ export default function AssignmentDetailsPage() {
                         <Input
                           id="totalPoints"
                           type="number"
-                          defaultValue={assignment.totalPoints}
+                          defaultValue={assignment?.totalPoints}
                         />
                       </div>
                     </div>
@@ -602,34 +631,35 @@ export default function AssignmentDetailsPage() {
                         </div>
                       </div>
 
-                      {assignment.attachments.length > 0 && (
-                        <div className="mt-4 space-y-2">
-                          {assignment.attachments.map((attachment, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between bg-white p-3 rounded-md border border-gray-200"
-                            >
-                              <div className="flex items-center">
-                                <Paperclip
-                                  size={16}
-                                  className="mr-2 text-gray-500"
-                                />
-                                <div>
-                                  <p className="font-medium text-sm">
-                                    {attachment.name}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {attachment.size}
-                                  </p>
+                      {assignment?.attachments &&
+                        assignment.attachments.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            {assignment.attachments.map((attachment, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between bg-white p-3 rounded-md border border-gray-200"
+                              >
+                                <div className="flex items-center">
+                                  <Paperclip
+                                    size={16}
+                                    className="mr-2 text-gray-500"
+                                  />
+                                  <div>
+                                    <p className="font-medium text-sm">
+                                      {attachment.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {attachment.size}
+                                    </p>
+                                  </div>
                                 </div>
+                                <Button variant="ghost" size="sm">
+                                  <X size={16} />
+                                </Button>
                               </div>
-                              <Button variant="ghost" size="sm">
-                                <X size={16} />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </div>
                 )}
@@ -697,12 +727,15 @@ export default function AssignmentDetailsPage() {
                           {submission.grade !== null ? (
                             <div className="flex items-center gap-2">
                               <span>
-                                {submission.grade}/{assignment.totalPoints}
+                                {submission.grade}/{assignment?.totalPoints}
                               </span>
                               <Progress
                                 value={
-                                  (submission.grade / assignment.totalPoints) *
-                                  100
+                                  assignment?.totalPoints
+                                    ? (submission.grade /
+                                        assignment.totalPoints) *
+                                      100
+                                    : 0
                                 }
                                 className="h-2 w-16"
                               />
@@ -969,7 +1002,7 @@ export default function AssignmentDetailsPage() {
                           : "-"}
                       </span>
                       <span className="text-gray-500">
-                        / {assignment.totalPoints}
+                        / {assignment?.totalPoints}
                       </span>
                     </div>
                   </div>
@@ -1097,7 +1130,7 @@ export default function AssignmentDetailsPage() {
                           id="grade"
                           type="number"
                           min="0"
-                          max={assignment.totalPoints}
+                          max={assignment?.totalPoints}
                           placeholder="Points"
                           value={gradePoints}
                           onChange={(e) => setGradePoints(e.target.value)}
@@ -1105,7 +1138,7 @@ export default function AssignmentDetailsPage() {
                         />
 
                         <span className="text-gray-500">
-                          /{assignment.totalPoints}
+                          /{assignment?.totalPoints}
                         </span>
                       </div>
 

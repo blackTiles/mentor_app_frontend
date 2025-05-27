@@ -33,6 +33,7 @@ import {
   FilePenLine,
   PlusIcon,
   ArrowLeft,
+  Edit,
 } from "lucide-react";
 import Spinner from "@/components/loaders/spinner";
 
@@ -101,7 +102,7 @@ export default function Workspace() {
   }, [workspaceId, setAssignments, setLoadingAssignments]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["assignments", workspaceId], 
+    queryKey: ["assignments", workspaceId],
     queryFn: fetchAssignments,
     enabled: !!workspaceId,
     refetchOnWindowFocus: false,
@@ -118,7 +119,7 @@ export default function Workspace() {
   //   }
   // }, [workspaceId, workspace]);
 
-  if(isLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Spinner />
@@ -153,11 +154,10 @@ export default function Workspace() {
                   {workspace?.name || "Workspace Overview"}
                 </h1>
               </div>
-              <CreateAssignment
-                isDialogOpen={isDialogOpen}
-                setIsDialogOpen={setIsDialogOpen}
-                workspaceId={workspaceId}
-              />
+              <Button variant="outline" className="cursor-pointer">
+                <Edit size={16} className="mr-2" />
+                Edit Workspace
+              </Button>
             </div>
           </div>
         </header>
@@ -197,10 +197,10 @@ export default function Workspace() {
                 <CardTitle className="text-lg font-medium">
                   Total Members
                 </CardTitle>
-                <PlusCircle
+                {/* <PlusCircle
                   size={20}
                   className="text-gray-700 cursor-pointer hover:text-gray-500"
-                />
+                /> */}
               </CardHeader>
               <CardContent>
                 <div className="flex items-center">
@@ -214,11 +214,18 @@ export default function Workspace() {
           </div>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Assignment List</CardTitle>
-              <CardDescription>
-                Manage your assignments across all workspaces
-              </CardDescription>
+            <CardHeader className="flex justify-between items-center gap-2">
+              <div className="flex flex-col gap-1">
+                <CardTitle>Assignment List</CardTitle>
+                <CardDescription>
+                  Manage your assignments across all workspaces
+                </CardDescription>
+              </div>
+              <CreateAssignment
+                isDialogOpen={isDialogOpen}
+                setIsDialogOpen={setIsDialogOpen}
+                workspaceId={workspaceId}
+              />
             </CardHeader>
             <CardContent>
               {loadingAssignments ? (
@@ -301,8 +308,10 @@ export default function Workspace() {
                               size="icon"
                               variant="ghost"
                               className="cursor-pointer"
-                              onClick={() => handleDeleteButtonClick(task._id)}
-                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteButtonClick(task._id);
+                              }}
                             >
                               <Trash2 color="red" size={16} />
                             </Button>

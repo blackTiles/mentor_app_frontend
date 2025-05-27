@@ -1,15 +1,6 @@
 import { create } from "zustand";
 import { Assignment } from "@/types/assignment";
 
-// interface Assignment {
-//   _id: string;
-//   title: string;
-//   description: string;
-//   workspace: string;
-//   teacher: string;
-//   dueDate: string;
-// }
-
 interface AssignmentStore {
   assignment: Assignment | null;
   setAssignment: (assignment: Assignment | null) => void;
