@@ -8,6 +8,7 @@ import { X } from "lucide-react";
 import Spinner from "@/components/loaders/spinner";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 import { WorkspaceProps } from "@/types/workspace";
+import { toast } from "sonner"
 
 interface Student {
   id: number;
@@ -19,15 +20,23 @@ interface Student {
 
 const CreateWorkspace = ({
   setShowWorkspaceModal,
+  workspace,
 }: {
   setShowWorkspaceModal: (show: boolean) => void;
+  workspace?: WorkspaceProps;
 }) => {
-  const { workspaces, setWorkspaces } = useWorkspaceStore((state) => state);
+  const { workspaces, setWorkspaces, setWorkspace } = useWorkspaceStore((state) => state);
   const [searchQuery, setSearchQuery] = useState("");
-  const [workspaceName, setWorkspaceName] = useState("");
-  const [workspaceDescription, setWorkspaceDescription] = useState("");
+  const [workspaceName, setWorkspaceName] = useState(
+    workspace ? workspace.name : ""
+  );
+  const [workspaceDescription, setWorkspaceDescription] = useState(
+    workspace ? workspace.description : ""
+  );
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<Student[]>([
+    ...(workspace ? workspace.members : []),
+  ]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
 
@@ -69,7 +78,7 @@ const CreateWorkspace = ({
       setCreatingWorkspace(true);
       const workspaceData = {
         name: workspaceName.trim(),
-        description: workspaceDescription.trim(),
+        description: workspaceDescription?.trim(),
         members: selectedStudents.map((student) => student._id),
       };
       const response = await API.post(
@@ -86,6 +95,34 @@ const CreateWorkspace = ({
       handleClose(); // Close the modal after successful creation
     } catch (error) {
       console.error("Error creating workspace:", error);
+    } finally {
+      setCreatingWorkspace(false);
+    }
+  };
+
+  // Handle workspace update
+  const handleUpdate = async () => {
+    try {
+      setCreatingWorkspace(true);
+      const workspaceData = {
+        id: workspace?._id,
+        name: workspaceName.trim(),
+        description: workspaceDescription?.trim(),
+        members: selectedStudents.map((student) => student._id),
+      };
+      const response = await API.put(
+        `/workspace/update-workspace/${workspace?._id}`,
+        workspaceData
+      );
+      if (response.data.success) {
+        console.log("Workspace updated successfully:", response);
+        const updatedWorkspace: WorkspaceProps = response.data.workspace;
+        setWorkspace(updatedWorkspace); // Update the workspace store with the updated workspace
+      }
+      toast.success("Workspace updated successfully!");
+      handleClose(); // Close the modal after successful update
+    } catch (error) {
+      console.error("Error updating workspace:", error);
     } finally {
       setCreatingWorkspace(false);
     }
@@ -134,7 +171,7 @@ const CreateWorkspace = ({
         <div className="p-4 sm:p-6 border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-xl md:text-2xl font-semibold md:font-bold text-gray-800">
-              New workspace
+              {workspace ? "Edit Workspace" : "New Workspace"}
             </h2>
             <button
               onClick={handleClose}
@@ -144,7 +181,9 @@ const CreateWorkspace = ({
             </button>
           </div>
           <p className="text-sm text-gray-600 mt-1">
-            Create a workspace for your students to collaborate on projects.
+            {workspace
+              ? "Edit the workspace details below to update your project."
+              : "Create a workspace for your students to collaborate on projects."}
           </p>
         </div>
 
@@ -250,7 +289,7 @@ const CreateWorkspace = ({
             <div className="flex flex-wrap gap-2">
               {selectedStudents.map((student) => (
                 <div
-                  key={student.id}
+                  key={student._id}
                   className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-sm flex items-center"
                 >
                   {student.name}
@@ -276,12 +315,14 @@ const CreateWorkspace = ({
             Cancel
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={workspace ? handleUpdate : handleSubmit}
             className="bg-gray-800 hover:bg-gray-700 text-white"
             disabled={!workspaceName.trim() || creatingWorkspace}
           >
             {creatingWorkspace ? (
               <Spinner color="border-white" size="h-5 w-5" />
+            ) : workspace ? (
+              "Update Workspace"
             ) : (
               "Create Workspace"
             )}

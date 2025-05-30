@@ -11,6 +11,7 @@ import AuthLayout from "@/pages/auth/layout";
 import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/context/AuthContext";
 
+
 const App = () => {
   const { isAuthenticated, user } = useAuth();
   return (

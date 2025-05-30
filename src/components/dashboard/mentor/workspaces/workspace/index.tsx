@@ -6,6 +6,7 @@ import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
 import { Assignment } from "@/types/assignment";
 import CreateAssignment from "@/components/workspace/CreateAssignment";
+import CreateWorkspace from "@/components/workspace/CreateWorkspace";
 import DeleteConfirmationPopup from "@/components/popups/DeleteConfirmationPopup";
 import {
   Card,
@@ -54,6 +55,7 @@ export default function Workspace() {
     useState(false);
   const [deleteAssignmentId, setDeleteAssignmentId] = useState<string>("");
   const [deletingAssignment, setDeletingAssignment] = useState(false);
+  const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
 
   const handleDeleteButtonClick = (assignmentId: string) => {
     setDeleteAssignmentId(assignmentId);
@@ -154,10 +156,16 @@ export default function Workspace() {
                   {workspace?.name || "Workspace Overview"}
                 </h1>
               </div>
-              <Button variant="outline" className="cursor-pointer">
+              <Button onClick={() => setShowWorkspaceModal(true)} variant="outline" className="cursor-pointer">
                 <Edit size={16} className="mr-2" />
                 Edit Workspace
               </Button>
+              {showWorkspaceModal && (
+                <CreateWorkspace
+                  workspace={workspace || undefined}
+                  setShowWorkspaceModal={setShowWorkspaceModal}
+                />
+              )}
             </div>
           </div>
         </header>
