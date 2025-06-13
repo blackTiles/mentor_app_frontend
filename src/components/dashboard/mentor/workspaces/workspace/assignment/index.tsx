@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import DeleteConfirmationPopup from "@/components/popups/DeleteConfirmationPopup";
 import API from "@/lib/axios/instance";
 import { useQuery } from "@tanstack/react-query";
 import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
 import { S3_BASE_URL } from "@/constants/urls";
+import { uploadFile } from "@/utils/uploadFile";
 import {
   Card,
   CardContent,
@@ -50,6 +52,7 @@ import {
   MessageCircle,
   Paperclip,
   Save,
+  Trash2,
   User,
   Users,
   X,
@@ -57,6 +60,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Assignment } from "@/types/assignment";
 
 interface Submission {
   id: string;
@@ -105,14 +109,38 @@ interface Submission {
 
 export default function AssignmentDetailsPage() {
   const navigate = useNavigate();
+  const formRef = useRef<HTMLFormElement>(null);
   const { assignmentId } = useParams<{ assignmentId: string }>();
-  const { assignment, setAssignment } = useAssignmentStore((state) => state);
+  const { assignment, setAssignment, assignments, setAssignments } =
+    useAssignmentStore((state) => state);
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeSubmission, setActiveSubmission] = useState<Submission | null>(
     null
   );
   const [feedbackText, setFeedbackText] = useState("");
   const [gradePoints, setGradePoints] = useState("");
+  const [deletingAssignment, setDeletingAssignment] = useState(false);
+  const [isDeleteConfirmationPopupOpen, setIsDeleteConfirmationPopupOpen] =
+    useState(false);
+  const [attachments, setAttachments] = useState<
+    { name: string; file: File; fileUrl: string }[]
+  >([]);
+  const [savingAssignment, setSavingAssignment] = useState(false);
+
+  const handleFilesUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const filesArray = Array.from(files);
+      setAttachments((prev) => [
+        ...prev,
+        ...filesArray.map((file) => ({
+          name: file.name,
+          file,
+          fileUrl: "",
+        })),
+      ]);
+    }
+  };
 
   const fetchAssignmentDetails = async () => {
     try {
@@ -137,6 +165,28 @@ export default function AssignmentDetailsPage() {
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    setDeletingAssignment(true);
+    try {
+      const response = await API.delete(
+        `/assignment/delete-assignment/${assignmentId}`
+      );
+      if (response.data.success) {
+        console.log("Assignment deleted successfully:", response.data);
+        const updatedAssignments = assignments.filter(
+          (a) => a._id !== assignmentId
+        );
+        setAssignments(updatedAssignments);
+        navigate(`/dashboard/mentor/workspaces/${assignment?.workspace?._id}`);
+      }
+    } catch (error) {
+      console.error("Error deleting assignment:", error);
+    } finally {
+      setDeletingAssignment(false);
+      setIsDeleteConfirmationPopupOpen(false);
+    }
+  };
 
   // Sample assignment data
   // const assignment: Assignment = {
@@ -344,9 +394,61 @@ export default function AssignmentDetailsPage() {
     }
   };
 
-  const handleSaveAssignment = () => {
-    // Logic to save assignment changes
-    setIsEditMode(false);
+  const handleSaveAssignment = async (
+    e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>
+  ) => {
+    setSavingAssignment(true);
+    try {
+      e.preventDefault();
+      const uploadFiles = await Promise.all(
+        attachments?.map(async (attachment, index) => {
+          const fileUrl = await uploadFile(
+            attachment.file,
+            "assignments",
+            (prog) => console.log(`Uploading ${attachment.name}: ${prog}%`)
+          );
+          console.log(`File uploaded: ${attachment.name} to ${fileUrl}`);
+          const newAttachments = [...attachments];
+          newAttachments[index] = { ...attachment, fileUrl };
+          setAttachments(newAttachments);
+          return {
+            name: attachment.name,
+            fileUrl,
+          };
+        })
+      );
+      console.log("Uploaded attachments:", uploadFiles);
+
+      const formData = new FormData(formRef.current!);
+
+      const updatedAttachments = [
+        ...(assignment?.attachments || []),
+        ...uploadFiles,
+      ];
+
+      const data = {
+        title: formData.get("title"),
+        description: formData.get("description"),
+        course: formData.get("course"),
+        workspace: assignment?.workspace?._id,
+        dueDate: formData.get("dueDate"),
+        totalPoints: Number(formData.get("points")),
+        attachments: updatedAttachments,
+      };
+      const response = await API.put(
+        `/assignment/update-assignment/${assignmentId}`,
+        data
+      );
+      console.log("Assignment updated successfully:", response);
+      if (response.data.success === true) {
+        setAssignment(response.data.assignment);
+        setIsEditMode(false);
+      }
+    } catch (error) {
+      console.error("Error saving assignment:", error);
+    } finally {
+      // setAttachments([]);
+    }
   };
 
   const openSubmission = (submission: Submission) => {
@@ -363,6 +465,19 @@ export default function AssignmentDetailsPage() {
     // Logic to save grade and feedback
     alert(`Grade saved: ${gradePoints} points with feedback`);
     closeSubmission();
+  };
+
+  const handleRemoveAttachment = (attachment: {
+    name: string;
+    fileUrl: string;
+  }) => {
+    if (!assignment) return;
+    setAssignment({
+      ...assignment,
+      attachments: assignment.attachments.filter(
+        (att) => att.fileUrl !== attachment.fileUrl
+      ),
+    });
   };
 
   const downloadAttachment = async (attachmentName: string) => {
@@ -411,10 +526,23 @@ export default function AssignmentDetailsPage() {
                   </CardDescription>
                 </div>
                 {!isEditMode ? (
-                  <Button variant="outline" onClick={() => setIsEditMode(true)}>
-                    <Edit size={16} className="mr-2" />
-                    Edit
-                  </Button>
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditMode(true)}
+                    >
+                      <Edit size={16} className="mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-red-600 hover:text-red-500"
+                      onClick={() => setIsDeleteConfirmationPopupOpen(true)}
+                    >
+                      <Trash2 size={16} className="mr-1" />
+                      Delete
+                    </Button>
+                  </div>
                 ) : (
                   <div className="flex gap-2">
                     <Button
@@ -555,10 +683,11 @@ export default function AssignmentDetailsPage() {
                                     </div>
                                     <Button
                                       onClick={() =>
-                                        downloadAttachment(attachment.name)
+                                        downloadAttachment(attachment.fileUrl)
                                       }
                                       variant="ghost"
                                       size="sm"
+                                      type="button"
                                     >
                                       <Download size={16} />
                                     </Button>
@@ -576,17 +705,22 @@ export default function AssignmentDetailsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <form className="space-y-6" ref={formRef}>
                     <div className="grid gap-4">
                       <div>
                         <Label htmlFor="title">Assignment Title</Label>
-                        <Input id="title" defaultValue={assignment?.title} />
+                        <Input
+                          id="title"
+                          name="title"
+                          defaultValue={assignment?.title}
+                        />
                       </div>
                       <div>
                         <Label htmlFor="description">Description</Label>
                         <Textarea
                           id="description"
                           rows={5}
+                          name="description"
                           defaultValue={assignment?.description}
                         />
                       </div>
@@ -597,6 +731,7 @@ export default function AssignmentDetailsPage() {
                         <Label htmlFor="dueDate">Due Date</Label>
                         <Input
                           id="dueDate"
+                          name="dueDate"
                           type="datetime-local"
                           defaultValue={
                             assignment?.dueDate
@@ -608,9 +743,10 @@ export default function AssignmentDetailsPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="totalPoints">Total Points</Label>
+                        <Label htmlFor="points">Total Points</Label>
                         <Input
-                          id="totalPoints"
+                          id="points"
+                          name="points"
                           type="number"
                           defaultValue={assignment?.totalPoints}
                         />
@@ -619,7 +755,15 @@ export default function AssignmentDetailsPage() {
 
                     <div>
                       <Label>Attachments</Label>
-                      <div className="mt-2 p-4 border-2 border-dashed border-gray-300 rounded-md text-center">
+                      <div
+                        onClick={() => {
+                          const fileInput = document.getElementById(
+                            "fileInput"
+                          ) as HTMLInputElement;
+                          fileInput?.click();
+                        }}
+                        className="mt-2 p-4 border-2 border-dashed border-gray-300 rounded-md text-center"
+                      >
                         <div className="flex flex-col items-center">
                           <Paperclip size={24} className="text-gray-500 mb-2" />
                           <p className="text-sm text-gray-600 mb-1">
@@ -630,11 +774,19 @@ export default function AssignmentDetailsPage() {
                           </p>
                         </div>
                       </div>
+                      <Input
+                        type="file"
+                        accept=".pdf,.docx,.zip"
+                        className="hidden"
+                        id="fileInput"
+                        onChange={handleFilesUpload}
+                        multiple
+                      />
 
-                      {assignment?.attachments &&
-                        assignment.attachments.length > 0 && (
+                      {/* {assignment?.attachments &&
+                        assignment.attachments.length > 0 && ( */}
                           <div className="mt-4 space-y-2">
-                            {assignment.attachments.map((attachment, index) => (
+                            {assignment?.attachments?.map((attachment, index) => (
                               <div
                                 key={index}
                                 className="flex items-center justify-between bg-white p-3 rounded-md border border-gray-200"
@@ -653,15 +805,92 @@ export default function AssignmentDetailsPage() {
                                     </p>
                                   </div>
                                 </div>
-                                <Button variant="ghost" size="sm">
+                                <Button
+                                  onClick={() =>
+                                    handleRemoveAttachment(attachment)
+                                  }
+                                  variant="ghost"
+                                  size="sm"
+                                  type="button"
+                                >
                                   <X size={16} />
                                 </Button>
                               </div>
                             ))}
                           </div>
-                        )}
+                        {/* )} */}
+
+                      <div className="mt-4 space-y-2">
+                        {attachments.map((attachment, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between bg-white p-3 rounded-md border border-gray-200"
+                          >
+                            <div className="flex items-center">
+                              <Paperclip
+                                size={16}
+                                className="mr-2 text-gray-500"
+                              />
+                              <div>
+                                <div className="flex items-center">
+                                  <p className="font-medium text-sm">
+                                    <Input
+                                      className="h-6 p-1 mr-1 inline-block w-auto"
+                                      value={attachment.name.substring(
+                                        0,
+                                        attachment.name.lastIndexOf(".") !== -1
+                                          ? attachment.name.lastIndexOf(".")
+                                          : attachment.name.length
+                                      )}
+                                      onChange={(e) => {
+                                        const extension =
+                                          attachment.name.includes(".")
+                                            ? attachment.name.substring(
+                                                attachment.name.lastIndexOf(".")
+                                              )
+                                            : "";
+                                        const newAttachments = [...attachments];
+                                        newAttachments[index].name =
+                                          e.target.value + extension;
+                                        setAttachments(newAttachments);
+                                      }}
+                                    />
+                                    <span>
+                                      {attachment.name.includes(".")
+                                        ? attachment.name.substring(
+                                            attachment.name.lastIndexOf(".")
+                                          )
+                                        : ""}
+                                    </span>
+                                  </p>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                  {attachment.file.size
+                                    ? `${(
+                                        attachment.file.size /
+                                        (1024 * 1024)
+                                      ).toFixed(2)} MB`
+                                    : "Unknown size"}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={() =>
+                                setAttachments((prev) =>
+                                  prev.filter((_, i) => i !== index)
+                                )
+                              }
+                              variant="ghost"
+                              size="sm"
+                              type="button"
+                            >
+                              <X size={16} />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  </form>
                 )}
               </CardContent>
             </Card>
@@ -1233,6 +1462,18 @@ export default function AssignmentDetailsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+      {assignment?._id && (
+        <DeleteConfirmationPopup
+          title="Delete Assignment"
+          description={`Are you sure you want to delete the assignment "${
+            assignment?.title || "this assignment"
+          }"?`}
+          onConfirm={() => handleDeleteAssignment(assignment._id)}
+          isDeleteConfirmationPopupOpen={isDeleteConfirmationPopupOpen}
+          setIsDeleteConfirmationPopupOpen={setIsDeleteConfirmationPopupOpen}
+          deletingAssignment={deletingAssignment}
+        />
       )}
     </div>
   );

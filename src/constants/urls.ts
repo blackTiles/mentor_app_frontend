@@ -1,5 +1,5 @@
-// export const ENV = "DEV" 
-export const ENV = "PROD" 
+export const ENV = "DEV" 
+// export const ENV = "PROD" 
 
 export const API_URL = {
     DEV: "http://localhost:5000/api",

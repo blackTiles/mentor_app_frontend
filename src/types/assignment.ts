@@ -3,7 +3,7 @@ export interface Assignment {
   title: string;
   description: string;
   workspace: {
-    id: string;
+    _id: string;
     name: string;
   };
   course: {

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "@/lib/axios/instance";
 import { useQuery } from "@tanstack/react-query";
@@ -7,32 +7,19 @@ import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
 import { Assignment } from "@/types/assignment";
 import CreateAssignment from "@/components/workspace/CreateAssignment";
 import CreateWorkspace from "@/components/workspace/CreateWorkspace";
-import DeleteConfirmationPopup from "@/components/popups/DeleteConfirmationPopup";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Clock,
   FileText,
   Users,
   PlusCircle,
-  Trash2,
-  FilePenLine,
-  PlusIcon,
   ArrowLeft,
   Edit,
 } from "lucide-react";
@@ -51,38 +38,7 @@ export default function Workspace() {
     setLoadingAssignments,
   } = useAssignmentStore((state) => state);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteConfirmationPopupOpen, setIsDeleteConfirmationPopupOpen] =
-    useState(false);
-  const [deleteAssignmentId, setDeleteAssignmentId] = useState<string>("");
-  const [deletingAssignment, setDeletingAssignment] = useState(false);
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
-
-  const handleDeleteButtonClick = (assignmentId: string) => {
-    setDeleteAssignmentId(assignmentId);
-    setIsDeleteConfirmationPopupOpen(true);
-  };
-
-  const handleDeleteAssignment = async (assignmentId: string) => {
-    setDeletingAssignment(true);
-    try {
-      const response = await API.delete(
-        `/assignment/delete-assignment/${assignmentId}`
-      );
-      if (response.data.success) {
-        console.log("Assignment deleted successfully:", response.data);
-        const updatedAssignments = assignments.filter(
-          (assignment: Assignment) => assignment._id !== assignmentId
-        );
-        setAssignments(updatedAssignments);
-        setDeleteAssignmentId("");
-      }
-    } catch (error) {
-      console.error("Error deleting assignment:", error);
-    } finally {
-      setDeletingAssignment(false);
-      setIsDeleteConfirmationPopupOpen(false);
-    }
-  };
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -111,16 +67,6 @@ export default function Workspace() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // useEffect(() => {
-  //   fetchAssignments();
-  // }, [setAssignments]);
-
-  // useEffect(() => {
-  //   if (workspace) {
-  //     console.log("Workspace", workspace);
-  //   }
-  // }, [workspaceId, workspace]);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -138,11 +84,11 @@ export default function Workspace() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100">
       {/* Main content */}
-      <div className="flex-1 overflow-auto no-scrollbar">
+      <div className="w-full no-scrollbar">
         <header className="bg-white shadow">
-          <div className="max-w-7xl mx-auto py-4 px-6">
+          <div className="w-full mx-auto py-4 px-6">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <Button
@@ -156,7 +102,11 @@ export default function Workspace() {
                   {workspace?.name || "Workspace Overview"}
                 </h1>
               </div>
-              <Button onClick={() => setShowWorkspaceModal(true)} variant="outline" className="cursor-pointer">
+              <Button
+                onClick={() => setShowWorkspaceModal(true)}
+                variant="outline"
+                className="cursor-pointer"
+              >
                 <Edit size={16} className="mr-2" />
                 Edit Workspace
               </Button>
@@ -170,9 +120,9 @@ export default function Workspace() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-6 px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <Card>
+        <main className="w-full py-6 px-6">
+          <div className="w-full flex flex-wrap items-center justify-center gap-6 mb-6">
+            <Card className="flex-1">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-medium">
                   Total Assignments
@@ -187,7 +137,7 @@ export default function Workspace() {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="flex-1">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-medium">
                   Due This Week
@@ -200,15 +150,11 @@ export default function Workspace() {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="flex-1">
               <CardHeader className="pb-2 flex justify-between items-center">
                 <CardTitle className="text-lg font-medium">
                   Total Members
                 </CardTitle>
-                {/* <PlusCircle
-                  size={20}
-                  className="text-gray-700 cursor-pointer hover:text-gray-500"
-                /> */}
               </CardHeader>
               <CardContent>
                 <div className="flex items-center">
@@ -252,100 +198,66 @@ export default function Workspace() {
                   </Button>
                 </div>
               ) : (
-                <Table className="no-scrollbar">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Points</TableHead>
-                      <TableHead>Attachments</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {assignments.map((task: Assignment) => (
-                      <TableRow
-                        key={task._id}
-                        className="hover:bg-gray-200 cursor-pointer"
-                        onClick={() =>
-                          navigate(
-                            `/dashboard/mentor/workspaces/${workspaceId}/${task._id}`
-                          )
-                        }
-                      >
-                        <TableCell title={task?.title} className="font-medium">
-                          {task.title?.length > 30
-                            ? task?.title?.slice(0, 30) + "..."
-                            : task?.title}
-                        </TableCell>
-                        <TableCell title={task?.description}>
-                          {task.description?.length > 30
-                            ? task?.description?.slice(0, 30) + "..."
-                            : task?.description}
-                          ...
-                        </TableCell>
-                        <TableCell>
-                          {task.dueDate
-                            ? new Date(task.dueDate).toLocaleDateString(
-                                "en-US",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                }
-                              )
-                            : "No due date"}
-                        </TableCell>
-                        <TableCell>{task.totalPoints}</TableCell>
-                        <TableCell>{task?.attachments?.length}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              size="icon"
-                              variant={"ghost"}
-                              className="cursor-pointer"
-                            >
-                              <FilePenLine color="gray" size={16} />
-                              {/* Edit */}
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteButtonClick(task._id);
-                              }}
-                            >
-                              <Trash2 color="red" size={16} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="flex flex-col gap-4">
+                  {assignments.map((task: Assignment) => (
+                    <div
+                      key={task._id}
+                      className="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between cursor-pointer hover:bg-gray-100 transition"
+                      onClick={() =>
+                        navigate(
+                          `/dashboard/mentor/workspaces/${workspaceId}/${task._id}`
+                        )
+                      }
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="font-semibold text-lg"
+                            title={task?.title}
+                          >
+                            {task.title}
+                          </span>
+                        </div>
+                        <div
+                          className="text-gray-500 text-sm mt-1"
+                          title={task?.description}
+                        >
+                          {task?.description}
+                        </div>
+                        <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-600">
+                          <span>
+                            <strong>Due:</strong>{" "}
+                            {task.dueDate
+                              ? new Date(task.dueDate).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  }
+                                )
+                              : "No due date"}
+                          </span>
+                          <span>
+                            <strong>Points:</strong> {task.totalPoints}
+                          </span>
+                          <span>
+                            <strong>Attachments:</strong>{" "}
+                            {task?.attachments?.length}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
         </main>
       </div>
-      <DeleteConfirmationPopup
-        title="Delete Assignment"
-        description={`Are you sure you want to delete the assignment "${
-          assignments.find(
-            (assignment) => assignment._id === deleteAssignmentId
-          )?.title
-        }"?`}
-        onConfirm={() => handleDeleteAssignment(deleteAssignmentId)}
-        isDeleteConfirmationPopupOpen={isDeleteConfirmationPopupOpen}
-        setIsDeleteConfirmationPopupOpen={setIsDeleteConfirmationPopupOpen}
-        deletingAssignment={deletingAssignment}
-      />
     </div>
   );
 }
