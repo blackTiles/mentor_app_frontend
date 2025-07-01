@@ -4,6 +4,7 @@ import API from "@/lib/axios/instance";
 import { useQuery } from "@tanstack/react-query";
 import { useWorkspaceStore } from "@/lib/zustand/workspaceStore";
 import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
+import { useAuth } from "@/context/AuthContext";
 import { Assignment } from "@/types/assignment";
 import CreateAssignment from "@/components/workspace/CreateAssignment";
 import CreateWorkspace from "@/components/workspace/CreateWorkspace";
@@ -15,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Clock,
   FileText,
@@ -22,12 +24,14 @@ import {
   PlusCircle,
   ArrowLeft,
   Edit,
+  Dot,
 } from "lucide-react";
 import Spinner from "@/components/loaders/spinner";
 
 export default function Workspace() {
   const navigate = useNavigate();
   const { workspaceId } = useParams<{ workspaceId: string }>();
+  const { user } = useAuth();
   const { workspaces, workspace, setWorkspace } = useWorkspaceStore(
     (state) => state
   );
@@ -102,14 +106,16 @@ export default function Workspace() {
                   {workspace?.name || "Workspace Overview"}
                 </h1>
               </div>
-              <Button
-                onClick={() => setShowWorkspaceModal(true)}
-                variant="outline"
-                className="cursor-pointer"
-              >
-                <Edit size={16} className="mr-2" />
-                Edit Workspace
-              </Button>
+              {workspace?.owner?._id === user?._id && (
+                <Button
+                  onClick={() => setShowWorkspaceModal(true)}
+                  variant="outline"
+                  className="cursor-pointer"
+                >
+                  <Edit size={16} className="mr-2" />
+                  Edit Workspace
+                </Button>
+              )}
               {showWorkspaceModal && (
                 <CreateWorkspace
                   workspace={workspace || undefined}
@@ -120,8 +126,8 @@ export default function Workspace() {
           </div>
         </header>
 
-        <main className="w-full py-6 px-6">
-          <div className="w-full flex flex-wrap items-center justify-center gap-6 mb-6">
+        <main className="w-full py-4 sm:py-6 px-2 sm:px-6">
+          <div className="w-full flex flex-wrap sm:items-center justify-center gap-3 sm:gap-6 mb-6">
             <Card className="flex-1">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-medium">
@@ -167,21 +173,65 @@ export default function Workspace() {
             </Card>
           </div>
 
-          <Card>
-            <CardHeader className="flex justify-between items-center gap-2">
+          <Card className="">
+            <CardHeader className="flex justify-between items-center gap-2 flex-wrap px-4 sm:px-6">
               <div className="flex flex-col gap-1">
                 <CardTitle>Assignment List</CardTitle>
                 <CardDescription>
                   Manage your assignments across all workspaces
                 </CardDescription>
               </div>
-              <CreateAssignment
-                isDialogOpen={isDialogOpen}
-                setIsDialogOpen={setIsDialogOpen}
-                workspaceId={workspaceId}
-              />
+              {workspace?.owner?._id === user?._id && (
+                <CreateAssignment
+                  isDialogOpen={isDialogOpen}
+                  setIsDialogOpen={setIsDialogOpen}
+                  workspaceId={workspaceId}
+                />
+              )}
+              {!loadingAssignments &&
+                assignments.length > 0 &&
+                user?.role === "student" && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover:bg-gray-200 text-gray-600"
+                      onClick={() => {
+                        // Filter logic for submitted assignments
+                      }}
+                    >
+                      All
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover:bg-gray-200 text-green-500"
+                      onClick={() => {
+                        // Filter logic for submitted assignments
+                      }}
+                    >
+                      Submitted
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover:bg-gray-200 text-yellow-500"
+                      onClick={() => {
+                        // Filter logic for pending assignments
+                      }}
+                    >
+                      Pending
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover:bg-gray-200 text-red-500"
+                      onClick={() => {
+                        // Filter logic for expired assignments
+                      }}
+                    >
+                      Expired
+                    </Badge>
+                  </div>
+                )}
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               {loadingAssignments ? (
                 <div className="flex items-center justify-center h-32">
                   <Spinner />
@@ -205,18 +255,54 @@ export default function Workspace() {
                       className="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between cursor-pointer hover:bg-gray-100 transition"
                       onClick={() =>
                         navigate(
-                          `/dashboard/mentor/workspaces/${workspaceId}/${task._id}`
+                          `/dashboard/${user?.role}/workspaces/${workspaceId}/${task._id}`
                         )
                       }
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span
+                        <div className="flex flex-col-reverse sm:flex-row justify-between gap-2">
+                          <h3
                             className="font-semibold text-lg"
                             title={task?.title}
                           >
                             {task.title}
-                          </span>
+                          </h3>
+                          {user?.role === "student" && (
+                            <div className="">
+                              {task?.submissions?.includes(user?._id) ? (
+                                <Badge
+                                  variant="outline"
+                                  className="cursor-pointer hover:bg-gray-200 text-green-500"
+                                  onClick={() => {
+                                    // Filter logic for submitted assignments
+                                  }}
+                                >
+                                  Submitted
+                                </Badge>
+                              ) : new Date() >
+                                new Date(task.dueDate || new Date()) ? (
+                                <Badge
+                                  variant="outline"
+                                  className="cursor-pointer hover:bg-gray-200 text-red-500"
+                                  onClick={() => {
+                                    // Filter logic for expired assignments
+                                  }}
+                                >
+                                  Expired
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="cursor-pointer hover:bg-gray-200 text-yellow-500"
+                                  onClick={() => {
+                                    // Filter logic for pending assignments
+                                  }}
+                                >
+                                  Pending
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div
                           className="text-gray-500 text-sm mt-1"

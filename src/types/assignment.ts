@@ -17,6 +17,7 @@ export interface Assignment {
   dueDate: string | null;
   totalPoints: number;
   attachments: Array<{ name: string; fileUrl: string; size: string }>;
+  submissions: Array<string>;
   createdAt: string;
   updatedAt: string;
   status: "active" | "archived";

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import DeleteConfirmationPopup from "@/components/popups/DeleteConfirmationPopup";
 import API from "@/lib/axios/instance";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
 import { useAssignmentStore } from "@/lib/zustand/assignmentStore";
 import { S3_BASE_URL } from "@/constants/urls";
 import { uploadFile } from "@/utils/uploadFile";
@@ -112,6 +113,7 @@ export default function AssignmentDetailsPage() {
   const navigate = useNavigate();
   const formRef = useRef<HTMLFormElement>(null);
   const { assignmentId } = useParams<{ assignmentId: string }>();
+  const { user } = useAuth();
   const { assignment, setAssignment, assignments, setAssignments } =
     useAssignmentStore((state) => state);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -155,6 +157,7 @@ export default function AssignmentDetailsPage() {
         throw new Error("Failed to fetch assignment details");
       }
     } catch (error) {
+      console.log("Error fetching assignment details:", error);
       throw new Error(" Failed to fetch assignment details");
     }
   };
@@ -527,7 +530,7 @@ export default function AssignmentDetailsPage() {
                     {assignment?.course?.name} - {assignment?.workspace?.name}
                   </CardDescription>
                 </div>
-                {!isEditMode ? (
+                {user?.role === "mentor" && !isEditMode && (
                   <div className="flex gap-2 items-center">
                     <Button
                       variant="outline"
@@ -545,7 +548,8 @@ export default function AssignmentDetailsPage() {
                       Delete
                     </Button>
                   </div>
-                ) : (
+                )}
+                {user?.role === "mentor" && isEditMode && (
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
